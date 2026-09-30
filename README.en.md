@@ -1,27 +1,27 @@
 <h1 align="center">ui-microcopy</h1>
 
 <p align="center">
-  <strong>一份 Claude Code skill 加一支 linter，讓介面字串讀起來像介面。</strong><br>
-  按鈕、狀態、錯誤、空狀態、數值列、備註、對話框文案——正體中文（台灣）、英文、日文。
+  <strong>A Claude Code skill and a linter for interface strings that read like an interface.</strong><br>
+  Button labels, statuses, errors, empty states, value rows, notes, dialog copy — in 正體中文（台灣）, English and 日本語.
 </p>
 
 <p align="center">
   <img alt="Claude Code skill" src="https://img.shields.io/badge/CLAUDE_CODE-SKILL-2196F3?style=for-the-badge">
-  <img alt="Linter：Python 3，無相依套件" src="https://img.shields.io/badge/LINTER-PYTHON_3%2C_NO_DEPS-4CAF50?style=for-the-badge&logo=python&logoColor=white">
-  <img alt="語言" src="https://img.shields.io/badge/ZH--TW_·_EN_·_JA-00A5A5?style=for-the-badge">
+  <img alt="Linter: Python 3, no dependencies" src="https://img.shields.io/badge/LINTER-PYTHON_3%2C_NO_DEPS-4CAF50?style=for-the-badge&logo=python&logoColor=white">
+  <img alt="Languages" src="https://img.shields.io/badge/ZH--TW_·_EN_·_JA-00A5A5?style=for-the-badge">
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <strong>繁體中文</strong>
+  <a href="README.md">繁體中文</a> · <strong>English</strong>
 </p>
 
 <p align="center">
-  <a href="#開始使用">開始使用</a>
-  · <a href="SKILL.md">skill 本體</a>
-  · <a href="references/roles.md">元件契約</a>
+  <a href="#getting-started">Getting started</a>
+  · <a href="SKILL.md">The skill</a>
+  · <a href="references/roles.md">Element contracts</a>
   · <a href="references/zh-tw-lexicon.md">台灣用語</a>
-  · <a href="#linter">linter</a>
-  · <a href="#量測方式">量測</a>
+  · <a href="#the-linter">The linter</a>
+  · <a href="#how-it-was-measured">Measurement</a>
 </p>
 
 ```sh
@@ -38,87 +38,123 @@ app_zh.arb: error: '當前設定已保存。' [zh-tw-vocabulary] 「當前」 is
 3 strings, 3 errors, 0 warnings
 ```
 
-請語言模型寫一個按鈕，它寫的是一句回話。請它寫狀態，它用人講話的方式報告（「裝好了」）。請它寫估計數字旁的備註，它替數字的來歷辯護（「碗與叉子本身不計入營養」「數字不是推測」）。這些都不是文法錯，而是聊天回答的語域滲進了只該做一件事的欄位。這個 repo 放的是擋住它的程序，以及程序漏掉時抓得到的檢查。
+A language model asked for a button writes a reply. Asked for a status it reports the way a person
+would say it out loud (「裝好了」). Asked for the note under an estimated number it defends how the
+number was produced (「碗與叉子本身不計入營養」「數字不是推測」). None of that is wrong grammar; it is
+the register of a chat answer leaking into a field that has one job. This repository holds the
+procedure that stops it and the check that catches what the procedure misses.
 
-**skill 是寫作程序。** 十項測試、固定順序——語言、事實、不捏造，然後才是元件的形式，最後才是刪減；每個元件一組成對範例，並寫出差異在哪。順序本身就是重點：把「刪減」放最前面的 skill 會刪掉必要事實、把英文題寫成中文；這一版正是量到這件事之後重寫的。
+**The skill is the writing procedure.** Ten tests in a fixed order — language, facts, invention,
+then the form of the element, then deletion — with one contrastive pair per element and the
+difference named. The order is the point: a skill that teaches deletion first deletes required
+facts and answers English briefs in Chinese; this one was rebuilt after measuring exactly that.
 
-**linter 是保證。** 模型會犯的樣式（回話用語、口語完成式、「我們」、來源辯護、器材與缺席免責、驚嘆號、中國用語）寫成規則，吃 TSV、JSON、JSONL、Flutter ARB 或純文字，用結束碼把關 CI。它刻意做成純規則，所以人、pipeline、評測工具看到的是同一份結果。
+**The linter is the guarantee.** Rules for the patterns a model falls into (reply lexicon,
+completion slang, 「我們」, provenance defences, apparatus and absence disclaimers, exclamation marks,
+China vocabulary) run on TSV, JSON, JSONL, Flutter ARB or plain text and gate CI with an exit code.
+It is deliberately rule-based, so a person, a pipeline and an evaluation harness all see the same
+findings.
 
-## 它做什麼
+## What it does
 
-### 每個元件用自己的形式寫
+### Writes each element in its own form
 
-每條使用者看得到的字串只有一件工作：命名一個動作、陳述一個狀態、標記一個數字，或給出那一件會改變數字怎麼讀的事實。[references/roles.md](references/roles.md) 給每個元件它的形式、語氣額度，以及一組 ✓／✗ 範例：
+Every user-visible string has one job: name an action, state a condition, tag a figure, or give the
+one fact that changes how a figure is read. [references/roles.md](references/roles.md) gives each
+element its form, its voice budget, and one accepted / rejected pair:
 
-| 元件 | 形式 | 語氣 |
+| Element | Form | Voice |
 | --- | --- | --- |
-| button | 動作的名字——動詞片語，沒有人稱，不是問句 | 無 |
-| dialog-title | 要做的決定；只有按鈕能回答時才用問句 | 無 |
-| dialog-body | 後果，說一次，不重複畫面上已有的 | 低 |
-| status | 收尾的狀態——已儲存 / Export complete / 保存しました | 無 |
-| error | 發生什麼、知道的話說原因、有的話說下一步 | 無 |
-| empty | 「沒有東西」這個狀態；動作留在控制項上 | 無 |
-| label | 東西的名字；設定項寫的是開啟後會怎樣 | 無 |
-| value | 數字、單位、範圍、目標——不確定性由數字與版面承載 | 無 |
-| note | 題目給的事實，一件一句，沒有就空 | 無 |
-| title | 畫面或步驟的名字 | onboarding 可以溫暖 |
+| button | the action's name — verb phrase, no person, no question | none |
+| dialog-title | the decision; a question only when the buttons answer it | none |
+| dialog-body | the consequence, once, and nothing already on screen | low |
+| status | the closed state — 已儲存 / Export complete / 保存しました | none |
+| error | what happened, the cause if known, the next step if one exists | none |
+| empty | the state of having nothing; the action stays on the control | none |
+| label | the name of the thing; for a setting, what happens when it is on | none |
+| value | number, unit, range, target — figure and layout carry the uncertainty | none |
+| note | the facts the brief gives, one clause each, or nothing | none |
+| title | the name of the screen or step | onboarding may be warm |
 
-平台慣例——Apple HIG 的大小寫與固定名稱、Material 的 sentence case、tap 與 click——放在同一個檔案的末尾，只改大小寫、幾個固定名稱與手勢動詞。
+Platform conventions — Apple HIG casing and fixed names, Material sentence case, tap versus click —
+sit at the end of the same file and change only casing, a few names and the gesture verb.
 
-### 說清楚估計值旁邊該放什麼
+### Says what belongs next to an estimate
 
-[references/uncertainty.md](references/uncertainty.md) 把「要不要加免責」拆成三層：估計的身分與讀者可以修正的假設是**必要**；範圍要看有沒有校準，是**有條件**；器材說明、缺席說明、樣板警語、自我辯護、模型自估的信心數字，**一律不放**。依據是不確定性溝通的文獻，不是品味。
+[references/uncertainty.md](references/uncertainty.md) splits the disclaimer question three ways:
+the estimate's identity and the assumption a reader can correct are **required**; a range is
+**conditional** on calibration; apparatus remarks, absence remarks, boilerplate cautions,
+self-defence and a model's own confidence figure are **never**. The evidence is from the
+uncertainty-communication literature, not taste.
 
-### 用台灣的詞
+### Uses Taiwan's words
 
-[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) 是 40 組詞，依畫面領域分組——儲存、網路、裝置、媒體、帳號、動作——每組附它指的概念，另有軟體語境白名單（帳號、用戶端、租用戶、餐廳的菜單），台灣自己的詞不會被「改正」。skill 要 agent 挑出這個畫面會用到的那幾列，而不是讀整張表：在刻意誘發漂移的題目上量測，只給相關的兩三列讓標準台灣詞的使用率從 43% 升到 66%；整張表只到 51%；單獨一句「不用中國用語」是唯一讓結果變差的條件。
+[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) is 40 term pairs grouped by screen
+domain — storage, network, devices, media, accounts, actions — each with the concept it names, plus
+a software-context whitelist (帳號, 用戶端, 租用戶, restaurant 菜單) so Taiwan's own terms are never
+"corrected". The skill tells the agent to pick the rows for the screen it is writing, not to read
+the table: measured on briefs written to invite drift, the two or three relevant rows raised use of
+the Taiwan term from 43% to 66%; the whole table reached 51%; a lone "do not use China usage" line
+was the only condition that made things worse.
 
-### app 內的模型寫字串時，修的是 prompt
+### Fixes the prompt when a model inside the app writes the string
 
-字串來自執行時的模型時——照片估算的備註、AI 摘要——要修的是欄位契約，不是文句。[references/runtime-llm-output.md](references/runtime-llm-output.md) 是契約，[assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 是可直接貼的區塊：每個欄位一組成對範例、允許空值、來源放自己的欄位、不要求信心或 ± 範圍。
+When the string comes from a runtime model — a photo-estimate note, an AI summary — the fix is the
+field contract, not the prose. [references/runtime-llm-output.md](references/runtime-llm-output.md)
+gives the contract and [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md)
+is the paste-in block: one contrastive pair per field, an allowed empty value, the source in its own
+field, no request for a confidence or a ± range.
 
-### 各種做法比一比
+### How it compares
 
-依量測結果，各部分在哪裡有效：
+Where each piece works, from what was measured:
 
-|                              | 只有規則檔 | 這個 skill | CI 裡的 linter | zhtw MCP |
-| ---------------------------- | :--------: | :--------: | :------------: | :------: |
-| 人手寫字串                   |     ⚠️     |     ✅     |       ✅       |    —     |
-| agent 在 coding session 寫字串 |     ⚠️     |     ✅     |       ✅       |    —     |
-| app 內的模型                 |     —      |     ✅     |       ⚠️       |    —     |
-| 抓到「當前」「保存」          |     —      |     ⚠️     |       ✅       |    —     |
-| 保留必要事實                 |     ⚠️     |     ✅     |       —        |    —     |
-| 維持題目的語言               |     ⚠️     |     ✅     |       —        |    —     |
-| 長文的翻譯腔與標點           |     —      |     —      |       —        |    ✅    |
+|                                              | Rules file only | This skill | Linter in CI | zhtw MCP |
+| -------------------------------------------- | :-------------: | :--------: | :----------: | :------: |
+| A person writing strings by hand             |       ⚠️        |     ✅     |      ✅      |    —     |
+| An agent writing strings in a coding session |       ⚠️        |     ✅     |      ✅      |    —     |
+| A model inside the app                       |       —         |     ✅     |      ⚠️      |    —     |
+| Catches 「當前」「保存」                        |       —         |     ⚠️     |      ✅      |    —     |
+| Keeps required facts                         |       ⚠️        |     ✅     |      —       |    —     |
+| Keeps the brief's language                   |       ⚠️        |     ✅     |      —       |    —     |
+| Long-form 翻譯腔 and punctuation              |       —         |     —      |      —       |    ✅    |
 
-agent 本來就帶著的規則檔是這個 skill 的弱化版（評測裡的「rules」arm 就是它）。linter 抓的是五十條裡一條、讀的人和模型都不會注意到的用語失誤。zhtw MCP 是長文工具：對上面那幾條字串它什麼都沒報。
+A rules file the agent already carries is a weaker version of the skill (it is what the "rules"
+arm of the evaluation was). The linter catches the one-in-fifty term slip that neither a reader nor
+the model notices. The zhtw MCP is a prose tool: on the strings above it reported nothing.
 
-## 開始使用
+## Getting started
 
-1. **安裝**，用 [Skills CLI](https://github.com/vercel-labs/skills)（Node 18+），對所有專案生效：
+1. **Install** with the [Skills CLI](https://github.com/vercel-labs/skills) (Node 18+), for every project:
 
    ```sh
    npx skills add KoukeNeko/ui-microcopy -g -a claude-code
    ```
 
-   拿掉 `-g` 就裝進目前專案的 `.claude/skills/`；拿掉 `-a` 讓 CLI 列出它偵測到的所有 agent（Codex、Cursor、OpenCode 等讀的是同一份 `SKILL.md`）。私有 repo 用你已經設好的 git 憑證。之後用 `npx skills update` 更新。沒有 Node 就直接 clone：
+   Drop `-g` to install into the current project's `.claude/skills/` instead, and `-a` to let the
+   CLI offer every agent it detects (Codex, Cursor, OpenCode and others read the same `SKILL.md`).
+   A private repository uses the git credentials you already have. `npx skills update` pulls a
+   newer version later. Without Node, clone it:
 
    ```sh
    git clone https://github.com/KoukeNeko/ui-microcopy.git ~/.claude/skills/ui-microcopy
    ```
 
-   寫或審 UI 文字、命名控制項、措辭錯誤或確認訊息、寫 app 內模型的 prompt 時，skill 會自己觸發。
+   The skill triggers on its own when you write or review UI text, name a control, word an error
+   or confirmation, or write the prompt for a model whose output an interface renders.
 
-2. **寫。** 給題目——畫面、元件、字串必須帶的事實、語言——skill 用元件的形式回答。回答前它自己跑的最後檢查：
+2. **Write.** Give the brief — screen, element, the facts the string must carry, the language — and
+   the skill answers in the element's form. The last check it runs before answering:
 
    ```text
-   1. 語言與題目相同？
-   2. 題目列的每個事實都還在？
-   3. 元件形式正確，而且沒有多的？
-   4. 字串在檔案裡 → 跑 linter，修它報的。
+   1. Same language as the brief?
+   2. Every fact the brief listed still present?
+   3. Element form correct, and nothing else?
+   4. Strings in a file → run the linter and fix what it reports.
    ```
 
-3. **Lint** app 實際出貨的字串，放 CI 或 pre-commit。沒有 error 結束碼是 0，否則是 1；`--strict` 連 warning 也擋：
+3. **Lint** the strings your app ships, in CI or a pre-commit hook. Exit status is 0 with no
+   errors, 1 otherwise; `--strict` fails on warnings too:
 
    ```sh
    python3 scripts/microcopy_lint.py --format arb lib/l10n/app_zh.arb
@@ -126,82 +162,113 @@ agent 本來就帶著的規則檔是這個 skill 的弱化版（評測裡的「r
    python3 scripts/microcopy_lint.py --format json --json strings.json
    ```
 
-   TSV 每行 `role<TAB>text`；JSON 與 JSONL 是 `{"role": ..., "text": ...}` 物件；純文字每行一條，角色為 `generic`。角色：`button`、`dialog-title`、`dialog-body`、`title`、`label`、`status`、`error`、`empty`、`value`、`note`、`ai-note`、`generic`。
+   TSV is `role<TAB>text` per line; JSON and JSONL are `{"role": ..., "text": ...}` objects; text
+   is one string per line with the role `generic`. Roles: `button`, `dialog-title`, `dialog-body`,
+   `title`, `label`, `status`, `error`, `empty`, `value`, `note`, `ai-note`, `generic`.
 
-4. **約束 app 內的模型。** 把 [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 貼在 app prompt 的輸出格式段落旁，讓它管欄位；再把 app 自己的 prompt 丟進[評測工具](https://github.com/KoukeNeko/ui-microcopy-eval)——備註非空率那張表會在出貨前告訴你欄位契約有沒有用。
+4. **Constrain the in-app model.** Paste
+   [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) beside the output
+   format section of the app's prompt so it governs the fields, then run the app's own prompt
+   through the [evaluation harness](https://github.com/KoukeNeko/ui-microcopy-eval) — the
+   note-emptiness table tells you whether the field contract works before you ship it.
 
-## linter
+## The linter
 
 ```sh
 python3 scripts/microcopy_lint.py --list-rules
 python3 scripts/microcopy_lint.py --self-test
 ```
 
-| 規則 | 等級 | 抓什麼 |
+| Rule | Level | Catches |
 | --- | --- | --- |
-| `chatty-lexicon` | error | 該是控制項或狀態的地方寫成兩個人的回話（算了、裝好了） |
-| `completion-slang` | error | 用口語報告完成，而不是收尾形式 |
-| `we-voice` | error | 介面以「我們」發言 |
-| `second-person` | warn | 不需要區分歸屬的「你的」 |
-| `question-label` | error | 控制項問問題而不是命名動作 |
-| `provenance-meta` | error | 字串替數值的來歷辯護（「數字不是推測」） |
-| `apparatus-disclaimer` | error | 解釋器材（「碗與叉子本身不計入營養」） |
-| `absence-disclaimer` | warn | 把「沒看到」當成證據來報告 |
-| `boilerplate-disclaimer` | error / warn | 每一列都能掛的警語 |
-| `self-estimated-range` | warn | 模型自己產生的信心或 ± |
-| `hedge-duplication` | warn | 已是估計值又用文字再說一次 |
-| `method-filler` | warn | 在被當成結果讀的備註裡描述方法 |
-| `redundant-qualifier` | warn | 範圍前的「約」、斜線後的「上限」 |
-| `exclamation-emoji` | error | 例行、錯誤、破壞性狀態不該有的語氣 |
-| `punctuation-form` | warn | 中文句子裡的半形標點 |
-| `trailing-period` | warn | 標籤結尾的句號 |
-| `role-length` | warn | 一條字串做兩件事 |
-| `zh-tw-vocabulary` | error / warn | 中國用語，先遮掉台灣白名單再比對 |
+| `chatty-lexicon` | error | a reply between two people where a control or state should be (算了, 裝好了) |
+| `completion-slang` | error | completion in conversational register instead of the closed form |
+| `we-voice` | error | the interface speaking as 「我們」 |
+| `second-person` | warn | 「你的」 where nothing needs disambiguating |
+| `question-label` | error | a control that asks a question instead of naming an action |
+| `provenance-meta` | error | a string defending how the value was produced (「數字不是推測」) |
+| `apparatus-disclaimer` | error | explaining away the apparatus (「碗與叉子本身不計入營養」) |
+| `absence-disclaimer` | warn | reporting what was not seen as if it were evidence |
+| `boilerplate-disclaimer` | error / warn | a caution every row could carry |
+| `self-estimated-range` | warn | a confidence or ± the model produced itself |
+| `hedge-duplication` | warn | an estimate hedged again in words |
+| `method-filler` | warn | method described inside a note read as a result |
+| `redundant-qualifier` | warn | 「約」 before a range, 「上限」 after a slash |
+| `exclamation-emoji` | error | tone no routine, error or destructive state should carry |
+| `punctuation-form` | warn | half-width punctuation in a Chinese sentence |
+| `trailing-period` | warn | a full stop on a label |
+| `role-length` | warn | a string doing two jobs |
+| `zh-tw-vocabulary` | error / warn | China vocabulary, with the Taiwan whitelist masked first |
 
-規則與範例在同一個檔案 `scripts/microcopy_lint.py`，除了 Python 3 沒有相依套件。`--self-test` 用範例逐條檢查規則。
+The rules and the worked examples are one file, `scripts/microcopy_lint.py`, with no dependencies
+beyond Python 3. `--self-test` checks every rule against its examples.
 
-## 量測方式
+## How it was measured
 
-這個 skill 的第一版替自己打分：評分器四分之三的禁止字串就在 skill 內文裡。現在這一版用 32 題 held-out 題目量測——由兩位沒看過 skill 的出題者寫成，跑七條模型管道，由兩個異家族的 judge 在兩軸各評 0／1（沒有多餘、必要事實齊全），配對分析加以題為叢集的 bootstrap，並以 108 條人工盲評校準。
+The first version of this skill graded itself: three quarters of its grader's forbidden strings
+were in the skill text. The current version was measured on 32 held-out briefs written by two
+authors who never saw the skill, across seven model channels, scored by two judges from other
+model families on two axes — no surplus, and every required fact present — with paired analysis
+and a probe-clustered bootstrap, and calibrated against 108 blind human ratings.
 
-| | 對 control 的淨通過差 | Δ 必要事實 |
+| | Net pass Δ vs control | Δ required facts |
 | --- | --- | --- |
-| 第一版，Claude 出的題 | +16 pp | −0.3 pp |
-| 第一版，GPT 出的題 | −5 pp | −15.7 pp |
-| **這一版，全部題目，judge A** | **+8 pp [+1, +15]** | −3.4 pp |
-| **這一版，全部題目，judge B** | **+8 pp [+1, +15]** | +1.1 pp |
+| first version, Claude-written briefs | +16 pp | −0.3 pp |
+| first version, GPT-written briefs | −5 pp | −15.7 pp |
+| **this version, all briefs, judge A** | **+8 pp [+1, +15]** | −3.4 pp |
+| **this version, all briefs, judge B** | **+8 pp [+1, +15]** | +1.1 pp |
 
-第一版還把 41–82% 的英文回答拉成中文；這一版 0–15%。題目沒列任何事實的備註，未加干預的模型有 88% 會填東西，這一版 0%。這些是開發過程的數字——語言修正是看了第一稿的結果才改的——驗證性的量測需要凍結的 skill 與沒人看過的題目。評測工具、題目、生成檔與判定檔在 [ui-microcopy-eval](https://github.com/KoukeNeko/ui-microcopy-eval)。
+The first version also pulled 41–82% of English answers into Chinese; this version 0–15%. Notes
+whose brief listed no facts were filled 88% of the time by the unaided models and 0% here. These
+are development numbers — the language fix was made after seeing the first draft's results — and a
+confirmatory run needs a frozen skill and briefs nobody has seen. The harness, briefs, generations
+and verdicts are in [ui-microcopy-eval](https://github.com/KoukeNeko/ui-microcopy-eval).
 
-## 規則從哪裡來
+## Where the rules come from
 
-下面每一筆來源都開過原文核對——題名、作者、出處、引用的主張——才拿來用；沒有任何規則建立在找不到的文獻上。契約與既有的指引一致，並補上它們沒明說的：Apple Human Interface Guidelines（Writing、Alerts）、Material 3 的 UX writing 指南、Microsoft 的繁中風格指南、GOV.UK 的內容指引、教育部《兩岸常用詞語對照表》、MDN 與 MozTW 的 zh-TW 翻譯指南、數位發展部《政府網站服務管理規範》。不確定性政策依據不確定性溝通的文獻（數字範圍幾乎不損信任、口語式的模糊損失很大；免責會習慣化；口語化的信心校準很差）。反例與順序的決定依據指令遵循文獻與這個 skill 自己的量測。完整清單在[參考文獻](#參考文獻)。
+Every source below was opened and checked — title, authors, venue and the claim it is cited for —
+before it was used; nothing rests on a reference that could not be found. The contracts agree with
+the guidance that already exists and add what it leaves implicit: Apple's
+Human Interface Guidelines (Writing, Alerts), Material 3's UX writing guide, Microsoft's zh-TW
+style guide, GOV.UK's content guidance, the Ministry of Education's 兩岸常用詞語對照表, MDN's and
+MozTW's zh-TW translation guides, and the Ministry of Digital Affairs' 政府網站服務管理規範. The
+uncertainty policy rests on the uncertainty-communication literature (numeric ranges cost little
+trust, verbal hedges cost a lot; disclaimers habituate; verbalised confidence is badly calibrated).
+The evidence for the negative-example and ordering decisions is the instruction-following
+literature and this skill's own measurement. The full list is in [References](#references).
 
-## 檔案配置
+## Repository layout
 
 ```text
-SKILL.md                              程序、十項測試、最後檢查
+SKILL.md                              the procedure, the ten tests, the last check
 references/
-  roles.md                            元件契約，每個一組 ✓/✗，平台慣例
-  uncertainty.md                      估計值旁該放什麼
-  zh-tw-lexicon.md                    依畫面領域分組的台灣用語、白名單、標點
-  runtime-llm-output.md               app 內模型的欄位契約
+  roles.md                            element contracts, one ✓/✗ pair each, platform conventions
+  uncertainty.md                      what goes next to an estimated number
+  zh-tw-lexicon.md                    Taiwan terms by screen domain, whitelist, punctuation
+  runtime-llm-output.md               field contracts for a model inside the app
 assets/
-  runtime-prompt-block.zh-TW.md       貼進那個模型 prompt 的區塊
+  runtime-prompt-block.zh-TW.md       paste-in block for that model's prompt
 scripts/
-  microcopy_lint.py                   linter；--self-test、--list-rules
+  microcopy_lint.py                   the linter; --self-test, --list-rules
 ```
 
-## 限制
+## Limits
 
-- 量測是 32 題、每題 2 次抽樣：看得到十個百分點以上的效果，看不到更細的。人工評分只有一位，也是提出抱怨的人。
-- 詞表 40 組。它抓的是模型在軟體文案裡真的會滑掉的詞，不是中國與台灣用語的全部差異；第二層（提交、點擊、保存、設置）只 warn，因為要看語境。
-- 日文與英文的契約有範例，但除了評測裡各六題之外沒有自己的 held-out 量測。
-- skill 只有文字。它看不到畫面；「畫面上已有」的測試靠題目說明畫面上有什麼。
+- The measurement is 32 briefs, two samples each: it sees effects of ten points or more, not
+  finer ones. One human rater, who is also the person who raised the complaint.
+- The lexicon is 40 pairs. It catches the words models actually slip on in software copy, not
+  every difference between China and Taiwan usage; the second tier (提交, 點擊, 保存, 設置) is a warning because
+  context decides.
+- Japanese and English contracts have examples but no held-out measurement of their own beyond
+  the six briefs each in the harness.
+- The skill is text. It cannot see the screen; the visible-information test relies on the brief
+  saying what is already on it.
 
-## 參考文獻
+## References
 
-128 筆來源，依字母排序。廠商文件與開源討論和論文一樣逐筆核對；數字取自摘要而非內文的，skill 的證據檔有註記。
+128 sources, alphabetical. Vendor documentation and open-source discussions are listed with the
+same care as papers; where a number was taken from an abstract rather than the body, the notes in the
+skill's evidence file say so.
 
 <details>
 <summary>Show all 128</summary>
