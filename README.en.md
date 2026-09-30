@@ -55,8 +55,9 @@ The repository contains two parts.
   measured.
 - **The linter** is a rule-based check. It covers the patterns models produce (reply lexicon,
   colloquial completion, 「我們」, provenance remarks, apparatus and absence disclaimers, exclamation
-  marks, China vocabulary), reads TSV, JSON, JSONL, Flutter ARB and plain text, and gates CI with
-  its exit code. Being rule-based, it gives a reviewer, a pipeline and an evaluation harness the
+  marks, China vocabulary), reads TSV, JSON, JSONL, Flutter ARB, plain text and Markdown, and gates
+  CI with its exit code. The same drift appears in a README a model writes — headings become
+  invitations, sentences address the reader — and the documentation rules exist for that. Being rule-based, it gives a reviewer, a pipeline and an evaluation harness the
   same findings.
 
 ## What it provides
@@ -167,10 +168,11 @@ git clone https://github.com/KoukeNeko/ui-microcopy.git ~/.claude/skills/ui-micr
    python3 scripts/microcopy_lint.py --format arb lib/l10n/app_zh.arb
    python3 scripts/microcopy_lint.py --format tsv strings.tsv --strict
    python3 scripts/microcopy_lint.py --format json --json strings.json
+   python3 scripts/microcopy_lint.py --format md README.md docs/*.md
    ```
 
    Input formats: TSV as `role<TAB>text` per line; JSON and JSONL as `{"role": ..., "text": ...}`
-   objects; plain text as one string per line with role `generic`. Roles: `button`, `dialog-title`,
+   objects; plain text as one string per line with role `generic`; Markdown with headings as `heading` and paragraphs and list items as `prose`, skipping code, tables and ✓/✗ pairs. Roles: `button`, `dialog-title`,
    `dialog-body`, `title`, `label`, `status`, `error`, `empty`, `value`, `note`, `ai-note`,
    `generic`.
 
@@ -207,6 +209,11 @@ python3 scripts/microcopy_lint.py --self-test
 | `trailing-period` | warn | a full stop on a label |
 | `role-length` | warn | a string beyond the role's length cap |
 | `zh-tw-vocabulary` | error / warn | China vocabulary; the Taiwan whitelist is masked before matching |
+| `heading-form` | error | a documentation heading that invites or asks (「各種做法比一比」, "Let's compare") |
+| `heading-question` | warn | a heading phrased as a question or how-to (「怎麼跑」, "How to install") |
+| `prose-particle` | error | a speech particle at the end of a documentation sentence (吧, 喔, 啦) |
+| `reader-address` | warn | documentation that addresses the reader (「你」) |
+| `rhetorical-question` | warn | a question in documentation the text answers itself |
 
 Rules and examples are in `scripts/microcopy_lint.py`, with no dependency beyond Python 3.
 `--self-test` verifies each rule against its examples.

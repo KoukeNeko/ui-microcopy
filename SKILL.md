@@ -1,6 +1,6 @@
 ---
 name: ui-microcopy
-description: Use when writing or rewriting user-visible strings — button labels, statuses, errors, empty states, value rows, notes, dialog copy — in any language, and when writing the prompt or schema that makes a model inside an app produce such strings. Triggers on writing UI text, naming a control, wording an error or confirmation, deciding what goes next to an estimated number, and on any text a model generates that an interface renders.
+description: Use when writing or rewriting user-visible strings — button labels, statuses, errors, empty states, value rows, notes, dialog copy — in any language, and when writing the prompt or schema that makes a model inside an app produce such strings. Triggers on writing UI text, naming a control, wording an error or confirmation, deciding what goes next to an estimated number, on any text a model generates that an interface renders, and on project documentation — a README or reference page — whose headings and sentences must read as reference rather than conversation.
 ---
 
 # UI microcopy
@@ -116,6 +116,21 @@ clause in onboarding, an example inside an error, an exclamation mark on a
 confirmation are not the problem; a claim the brief never made is. What goes is
 the clause that carries no information *and* the clause that carries
 information the brief did not give.
+
+## Documentation is interface too
+
+The same drift appears in a README a model writes: headings become
+invitations (「各種做法比一比」, "Let's compare"), sections become questions
+(「怎麼跑」), sentences address the reader (「你可以拿掉 -g」) and end in
+speech particles. A document is read the way a screen is: the heading names
+the section, the sentence states the fact, and the reader is not addressed.
+Test 1 (language), test 5 (reply register) and test 8 (visible) apply
+unchanged. The linter reads Markdown: headings as `heading`, paragraphs and
+list items as `prose`; quoted spans, code, tables and ✓／✗ pairs are skipped.
+
+```sh
+python3 scripts/microcopy_lint.py --format md README.md
+```
 
 ## Where the pain actually was
 

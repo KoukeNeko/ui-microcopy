@@ -14,6 +14,8 @@ Input is a list of ``{role, text}`` items, read from one of:
   ``--format jsonl`` one object per line
   ``--format arb``   a Flutter ARB file (``@``-prefixed keys are metadata)
   ``--format text``  one string per line, role ``generic``
+  ``--format md``    a Markdown document: headings as ``heading``, paragraphs
+                     and list items as ``prose``; code, tables and HTML skipped
 
 Exit status is 0 when no ``error`` was found, 1 when at least one was, so the
 command can gate CI. Use ``--strict`` to fail on warnings too.
@@ -43,7 +45,11 @@ ROLES = (
     "note",
     "ai-note",
     "generic",
+    # documentation: a README or reference page reads as an interface too
+    "heading",
+    "prose",
 )
+DOC_ROLES = frozenset({"heading", "prose"})
 
 # Roles whose text is a control or a state, never a sentence addressed to
 # someone: a person's name for themselves does not belong in them.
@@ -58,6 +64,7 @@ LENGTH_CAP = {
     "dialog-title": 16,
     "dialog-body": 96,
     "title": 16,
+    "heading": 24,
     "label": 12,
     "status": 24,
     "error": 48,
@@ -280,7 +287,7 @@ RULES: tuple[Rule, ...] = (
         "exclamation-emoji",
         "error",
         None,
-        re.compile(r"[!！]|[\U0001f300-\U0001faff☀-➿⬀-⯿]"),
+        re.compile(r"[!！]|[\U0001f300-\U0001faff☀-✒✚-✦✩-✱✳-➿⬀-⯿]"),
         "Tone no routine, error or destructive state should carry.",
         "Delete it. State the change.",
     ),
@@ -300,7 +307,54 @@ RULES: tuple[Rule, ...] = (
         "A label is a phrase, not a sentence.",
         "Drop the full stop: 「安裝完成」 stands as the whole string.",
     ),
+    # Documentation. The same drift shows up in a README a model writes:
+    # headings become invitations, sentences address the reader, particles
+    # creep in. Quoted spans (「…」, `…`) are masked first so a document may
+    # discuss a bad string without being flagged for it.
+    Rule(
+        "heading-form",
+        "error",
+        frozenset({"heading"}),
+        re.compile(r"[?？!！]\s*$|吧$|看看|比一比|一次搞定|來吧|Let[’']s\b|^Ready to\b|^Want to\b"),
+        "A heading that invites or asks instead of naming its section.",
+        "A noun phrase: 「安裝」, 「限制」, \"Installation\", \"Limits\".",
+    ),
+    Rule(
+        "heading-question",
+        "warn",
+        frozenset({"heading"}),
+        re.compile(r"^(怎麼|如何|為什麼|為何|要不要|該不該|什麼是)|^(How to|How do|Why|What is|Should)\b"),
+        "A heading phrased as a question or a how-to.",
+        "Name the thing: 「執行」 rather than 「怎麼跑」, \"Installation\" rather than \"How to install\".",
+    ),
+    Rule(
+        "reader-address",
+        "warn",
+        DOC_ROLES,
+        re.compile(r"你們|你的|您的|(?<![「『])你(?![」』])|(?<![「『])您(?![」』])"),
+        "Documentation addresses the reader.",
+        "State the fact: 「省略 -g 則安裝至專案」, not 「你可以拿掉 -g」.",
+    ),
+    Rule(
+        "prose-particle",
+        "error",
+        DOC_ROLES,
+        re.compile(r"(吧|喔|啦|呢|囉|嘛|耶|哦)(?=[，。！？!?,.]|\s|$)"),
+        "A sentence-final particle from speech.",
+        "Delete it; the sentence stands without it.",
+    ),
+    Rule(
+        "rhetorical-question",
+        "warn",
+        frozenset({"prose"}),
+        re.compile(r"[?？](?=\s|$)"),
+        "A question in documentation that the text then answers itself.",
+        "State the answer.",
+    ),
 )
+
+# Spans a document quotes to discuss them, not to say them.
+QUOTED_SPAN = re.compile(r"「[^」]*」|『[^』]*』|`[^`]*`|“[^”]*”")
 
 
 @dataclass
@@ -330,10 +384,13 @@ class Finding:
 def lint_text(role: str, text: str, where: str = "") -> list[Finding]:
     """Every rule that fires for one string, longest match reported first."""
     findings: list[Finding] = []
+    # A document may quote a bad string to discuss it; the quote is not the
+    # document's own voice.
+    subject = QUOTED_SPAN.sub(lambda m: "＊" * len(m.group(0)), text) if role in DOC_ROLES else text
     for rule in RULES:
         if rule.roles is not None and role not in rule.roles:
             continue
-        match = rule.pattern.search(text)
+        match = rule.pattern.search(subject)
         if match:
             findings.append(
                 Finding(
@@ -364,7 +421,7 @@ def lint_text(role: str, text: str, where: str = "") -> list[Finding]:
     # Taiwan's own terms that contain a China-looking substring are masked
     # before the vocabulary pass, so 伺服器端 does not trip 服務器 and 數據機
     # does not trip 數據.
-    masked = text
+    masked = subject
     for term in TW_WHITELIST:
         masked = masked.replace(term, "＊" * len(term))
     for severity, pattern, suggestion in CN_TERMS:
@@ -419,6 +476,8 @@ def read_items(path: Path, fmt: str) -> list[dict]:
             for line in raw.splitlines()
             if line.strip()
         ]
+    if fmt == "md":
+        return read_markdown(raw, str(path))
     if fmt == "arb":
         data = json.loads(raw)
         return [
@@ -431,6 +490,37 @@ def read_items(path: Path, fmt: str) -> list[dict]:
         for line in raw.splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
+
+
+def read_markdown(raw: str, where: str) -> list[dict]:
+    """Headings as ``heading``, paragraph and list lines as ``prose``. Fenced
+    code, tables, HTML blocks, images and link-only lines are skipped: they
+    are not the document's voice."""
+    items: list[dict] = []
+    in_code = False
+    for n, line in enumerate(raw.splitlines(), 1):
+        stripped = line.strip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            in_code = not in_code
+            continue
+        if in_code or not stripped:
+            continue
+        if stripped.startswith(("|", "<", "![", "[![")) or re.fullmatch(r"\[[^\]]+\]\([^)]+\)", stripped):
+            continue
+        heading = re.match(r"^#{1,6}\s+(.*)", stripped)
+        if heading:
+            items.append({"role": "heading", "text": heading.group(1).strip(), "where": f"{where}:{n}"})
+            continue
+        body = re.sub(r"^(\s*[-*+]\s+|\s*\d+[.)]\s+|>\s*)", "", line).strip()
+        if re.search(r"https?://\S+\)?\s*$", body) and re.match(r"^\s*[-*+]\s+", line):
+            continue  # a reference entry quotes a title; it is not the document's voice
+        if body.startswith(("✓", "✗", "✔", "✘")):
+            continue  # a contrastive example is quoted, not spoken
+        body = re.sub(r"\*\*([^*]+)\*\*|\*([^*]+)\*", lambda m: m.group(1) or m.group(2), body)
+        body = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", body)
+        if body:
+            items.append({"role": "prose", "text": body, "where": f"{where}:{n}"})
+    return items
 
 
 # The examples the rules were written against. Every pair is one the skill
@@ -461,6 +551,15 @@ SELF_TEST = (
     ("value", "620 kcal（約 ±100）", "self-estimated-range"),
     ("label", "伺服器端錯誤", None),
     ("label", "數據機", None),
+    # documentation
+    ("heading", "各種做法比一比", "heading-form"),
+    ("heading", "怎麼跑", "heading-question"),
+    ("heading", "安裝", None),
+    ("heading", "Installation", None),
+    ("prose", "拿掉 -g 就裝進專案吧。", "prose-particle"),
+    ("prose", "你只要跑一次 linter。", "reader-address"),
+    ("prose", "規則「你的」只在需要區分歸屬時出現。", None),
+    ("prose", "省略 -g 則安裝至目前專案的 .claude/skills/。", None),
 )
 
 
@@ -491,7 +590,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument(
-        "--format", default="tsv", choices=("tsv", "json", "jsonl", "arb", "text")
+        "--format", default="tsv", choices=("tsv", "json", "jsonl", "arb", "text", "md")
     )
     parser.add_argument("--json", action="store_true", help="print findings as JSON")
     parser.add_argument("--strict", action="store_true", help="warnings fail too")

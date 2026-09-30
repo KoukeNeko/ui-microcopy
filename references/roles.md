@@ -135,6 +135,27 @@ Voice: onboarding titles may be warm; screen titles are names.
 - ✗ 來看看今天的紀錄吧
 - Difference: the ✓ names the place; the ✗ invites.
 
+### heading — the name of the section
+
+Form: noun phrase; not a question, not an invitation, no how-to.
+Voice: none.
+
+- ✓ 安裝 ／ 限制 ／ 量測 ／ Installation ／ Limits
+- ✗ 怎麼跑 ／ 各種做法比一比 ／ How to get started ／ Let's compare
+- Difference: the ✓ names what the section holds; the ✗ talks to the reader
+  about it.
+
+### prose — the sentence in a document
+
+Form: declarative; the subject is the thing, not the reader; a quoted bad
+string sits inside 「」.
+Voice: none.
+
+- ✓ 省略 -g 則安裝至目前專案的 .claude/skills/。 ／ The linter exits 1 on an error.
+- ✗ 拿掉 -g 就裝進專案吧。 ／ 你只要跑一次 linter。 ／ Just run the linter and you're done!
+- Difference: the ✓ states what happens; the ✗ coaches, addresses and
+  reassures.
+
 ## Two failures the contracts alone do not catch
 
 - **Restating the input.** A note or remark that lists every figure already on

@@ -45,7 +45,7 @@ app_zh.arb: error: '當前設定已保存。' [zh-tw-vocabulary] 「當前」 is
 本 repo 包含兩部分：
 
 - **skill**：寫作程序。十項測試依固定順序執行——語言、事實、不捏造、元件形式、刪減——每個元件附一組對照範例並標明差異。順序是設計重點：以刪減為首的程序會刪除必要事實，並使英文題目的回答轉為中文；本版依此量測結果重寫。
-- **linter**：規則式檢查。涵蓋模型常見的樣式（回話用語、口語完成式、「我們」、來源說明、器材與缺席免責、驚嘆號、中國用語），接受 TSV、JSON、JSONL、Flutter ARB 與純文字，以結束碼供 CI 把關。規則式的設計使人工檢查、pipeline 與評測工具得到相同結果。
+- **linter**：規則式檢查。涵蓋模型常見的樣式（回話用語、口語完成式、「我們」、來源說明、器材與缺席免責、驚嘆號、中國用語），接受 TSV、JSON、JSONL、Flutter ARB、純文字與 Markdown 文件，以結束碼供 CI 把關。同一種語域漂移也出現在模型撰寫的 README：標題變成邀請、句子對讀者說話；文件規則即為此而設。規則式的設計使人工檢查、pipeline 與評測工具得到相同結果。
 
 ## 功能
 
@@ -74,7 +74,7 @@ app_zh.arb: error: '當前設定已保存。' [zh-tw-vocabulary] 「當前」 is
 
 ### 台灣用語
 
-[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) 收錄 40 組詞，依畫面領域分組（儲存、網路、裝置、媒體、帳號、動作），每組附對應概念，並設軟體語境白名單（帳號、用戶端、租用戶、餐廳菜單）。skill 要求 agent 只取出目前畫面相關的列，不讀取整表。量測結果：在誘發漂移的題目上，提供相關的 1–3 列使標準台灣詞使用率由 43% 升至 66%；提供整表為 51%；僅提供一句「不用中國用語」的否定指示是唯一使結果變差的條件。
+[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) 收錄 40 組詞，依畫面領域分組（儲存、網路、裝置、媒體、帳號、動作），每組附對應概念，並設軟體語境白名單（「帳號」「用戶端」「租用戶」、餐廳的「菜單」）。skill 要求 agent 只取出目前畫面相關的列，不讀取整表。量測結果：在誘發漂移的題目上，提供相關的 1–3 列使標準台灣詞使用率由 43% 升至 66%；提供整表為 51%；僅提供一句「不用中國用語」的否定指示是唯一使結果變差的條件。
 
 ### app 內模型的欄位契約
 
@@ -129,9 +129,10 @@ git clone https://github.com/KoukeNeko/ui-microcopy.git ~/.claude/skills/ui-micr
    python3 scripts/microcopy_lint.py --format arb lib/l10n/app_zh.arb
    python3 scripts/microcopy_lint.py --format tsv strings.tsv --strict
    python3 scripts/microcopy_lint.py --format json --json strings.json
+   python3 scripts/microcopy_lint.py --format md README.md docs/*.md
    ```
 
-   輸入格式：TSV 每行 `role<TAB>text`；JSON 與 JSONL 為 `{"role": ..., "text": ...}` 物件；純文字每行一條，角色為 `generic`。角色：`button`、`dialog-title`、`dialog-body`、`title`、`label`、`status`、`error`、`empty`、`value`、`note`、`ai-note`、`generic`。
+   輸入格式：TSV 每行 `role<TAB>text`；JSON 與 JSONL 為 `{"role": ..., "text": ...}` 物件；純文字每行一條，角色為 `generic`；Markdown 的標題為 `heading`、段落與清單為 `prose`，程式碼、表格與 ✓／✗ 範例略過。角色：`button`、`dialog-title`、`dialog-body`、`title`、`label`、`status`、`error`、`empty`、`value`、`note`、`ai-note`、`generic`。
 
 3. **約束 app 內模型。** 將 [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 置於 app prompt 的輸出格式段落旁；以[評測工具](https://github.com/KoukeNeko/ui-microcopy-eval)執行 app 的 prompt，依備註非空率表確認欄位契約是否生效。
 
@@ -162,6 +163,11 @@ python3 scripts/microcopy_lint.py --self-test
 | `trailing-period` | warn | 標籤結尾的句號 |
 | `role-length` | warn | 超出角色長度上限的字串 |
 | `zh-tw-vocabulary` | error / warn | 中國用語；比對前先遮蔽台灣白名單 |
+| `heading-form` | error | 邀請或提問式的文件標題（「各種做法比一比」） |
+| `heading-question` | warn | 問句或 how-to 式的文件標題（「怎麼跑」） |
+| `prose-particle` | error | 文件句尾的口語助詞（吧、喔、啦） |
+| `reader-address` | warn | 文件中對讀者的稱呼（「你」） |
+| `rhetorical-question` | warn | 文件中自問自答的問句 |
 
 規則與範例位於 `scripts/microcopy_lint.py`，除 Python 3 外無相依套件。`--self-test` 以範例逐條驗證規則。
 
@@ -200,7 +206,7 @@ scripts/
 ## 限制
 
 - 量測規模為 32 題、每題 2 次抽樣，可偵測十個百分點以上的效果。人工評分者一位，為問題提出者本人。
-- 詞表 40 組，涵蓋模型於軟體文案中實際出現的用語，非中國與台灣用語的完整差異；第二層（提交、點擊、保存、設置）僅 warn。
+- 詞表 40 組，涵蓋模型於軟體文案中實際出現的用語，非中國與台灣用語的完整差異；第二層（「提交」「點擊」「保存」「設置」）僅 warn。
 - 日文與英文契約附範例，held-out 量測各僅六題。
 - skill 僅處理文字，無法取得畫面；「畫面已有資訊」的判斷依賴題目說明。
 
