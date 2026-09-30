@@ -69,7 +69,7 @@ machine, so they live in the linter as much as here.
 
 | # | Test | Question |
 | --- | --- | --- |
-| 1 | Language | Is the string in the brief's language? |
+| 1 | Language | Is the string in the brief's language? For 正體中文（台灣）, open [references/zh-tw-lexicon.md](references/zh-tw-lexicon.md), take the rows for the things this screen names, and write with those rows in view — a model handed the two rows it needs uses the Taiwan term; a model handed the whole table half the time does not. |
 | 2 | Facts | Is every fact the brief requires still recoverable from the string? |
 | 3 | Invention | Does it assert anything the brief did not give — a claim ("or tracked", "will not collect"), a promise, a guarantee? |
 | 4 | Control | Is this control named by something other than the action it performs? |
@@ -137,12 +137,13 @@ writing strings by hand.
 - [references/roles.md](references/roles.md) — element contracts, one ✓/✗ pair each, voice budget per surface
 - [references/uncertainty.md](references/uncertainty.md) — what goes next to an estimated number: required, conditional, never
 - [references/runtime-llm-output.md](references/runtime-llm-output.md) — field contracts for in-app models
-- [references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) — Taiwan usage, two tiers, with a software-context whitelist
+- [references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) — Taiwan terms by screen domain; read the group the screen belongs to, not the whole file
 - [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) — paste-in block
 - [scripts/microcopy_lint.py](scripts/microcopy_lint.py) — the CI check
 
 ## Last check before answering
 
-1. Same language as the brief? (English brief → English; 日本語 → 日本語; 繁體中文 → 繁體中文)
+1. Same language as the brief? (English brief → English; 日本語 → 日本語; 繁體中文 → 繁體中文, with the lexicon rows for this screen picked out)
 2. Every fact the brief listed for this string still present?
 3. Element form correct, and nothing else?
+4. When the strings sit in a file, run `python3 scripts/microcopy_lint.py <file>` and fix what it reports; a term slip is rare enough (about one string in fifty) that reading will not catch it.
