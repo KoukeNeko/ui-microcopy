@@ -138,8 +138,8 @@ npx skills add KoukeNeko/ui-microcopy -g -a claude-code
 ```
 
 Omit `-g` to install into the current project's `.claude/skills/`; omit `-a` to let the CLI list
-the agents it detects (Codex, Cursor, OpenCode and others read the same `SKILL.md`). A private
-repository uses the existing git credentials. Update with `npx skills update`.
+the agents it detects (Codex, Cursor, OpenCode and others read the same `SKILL.md`). Update with
+`npx skills update`.
 
 Without Node, clone the repository:
 

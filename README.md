@@ -104,7 +104,7 @@ app_zh.arb: error: '當前設定已保存。' [zh-tw-vocabulary] 「當前」 is
 npx skills add KoukeNeko/ui-microcopy -g -a claude-code
 ```
 
-省略 `-g` 則安裝至目前專案的 `.claude/skills/`；省略 `-a` 則由 CLI 列出偵測到的 agent（Codex、Cursor、OpenCode 等讀取同一份 `SKILL.md`）。私有 repo 使用既有的 git 憑證。更新：`npx skills update`。
+省略 `-g` 則安裝至目前專案的 `.claude/skills/`；省略 `-a` 則由 CLI 列出偵測到的 agent（Codex、Cursor、OpenCode 等讀取同一份 `SKILL.md`）。更新：`npx skills update`。
 
 不使用 Node 時，直接 clone：
 
