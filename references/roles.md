@@ -67,6 +67,10 @@ Voice: none. No apology, no reassurance, no exclamation mark.
 - ✗ 哎呀，這台機器正從它開機，所以不能裝喔，別擔心，換一顆就好！
 - Difference: the ✓ separates state, cause and action; the ✗ narrates the
   cause in speech register and wraps it in comfort.
+- A field error sits next to the field and says what to enter, in the
+  affirmative; a format example is content, not surplus: ✓ 請輸入電子郵件地址，
+  格式如 name@example.com ／ Use letters only in the name field; ✗ 不要輸入數字
+  或符號 ／ Invalid name.
 
 ### empty — the state of having nothing
 
@@ -88,6 +92,9 @@ Voice: none.
 - ✓ 熱量 ／ 關閉面板 ／ 更多選項 ／ Add to favourites ／ 再生キュー
 - ✗ 你的每日熱量攝取。 ／ 點這裡關閉
 - Difference: the ✓ names; the ✗ addresses the reader and instructs.
+- A setting's label or description states what happens when it is on; the
+  off case is inferred: ✓ 洗手時自動開始計時 ／ Start a timer when you wash
+  your hands; ✗ 開啟後洗手時會計時，關閉後不會.
 
 ### value — the figure
 
@@ -157,3 +164,23 @@ they disambiguate whose data is meant; 「我們」 never. Vocabulary follows
 polite forms for statuses (保存しました) and plain nouns for controls (削除,
 キャンセル). English uses the conventional action names (Cancel, Save, Delete,
 Keep).
+
+## Platform conventions
+
+The contracts above do not change by platform; casing, a few fixed names
+and the gesture verb do. Pick the platform's convention and hold it across
+the app.
+
+- **Apple (HIG).** Button titles and alert titles that are fragments use
+  title-style capitalization with no ending punctuation; alert messages use
+  sentence style. A button that cancels is always Cancel; OK only in a
+  purely informational alert, never as the confirming button of an action
+  (Erase, Convert, Delete instead). A multi-step flow keeps one set of step
+  labels — Get Started, then Continue or Next, then Done. To send someone to
+  a setting, give a link or button, never a description of where it is. Say
+  tap on a touch device, click with a pointer. Do not alert for a common,
+  undoable action; alert for an uncommon one that cannot be undone.
+- **Material.** Sentence case for everything, buttons included. Spell words
+  out — no e.g., etc., or other abbreviations where there is room. State a
+  consequence in neutral, direct language and how to undo it; no warning
+  that alarms, intimidates or condescends.
