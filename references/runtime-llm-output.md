@@ -1,16 +1,15 @@
 # Text a model writes into the interface
 
-When an app asks a model for text that the UI renders — a photo estimate's
-notes, a coach line, a summary — the prompt and the schema decide whether that
-text is interface or conversation. Editing the sentence afterwards is the wrong
-layer; the contract produced it.
+When an app asks a model for text the UI renders — a photo estimate's notes,
+a sleep remark, a meeting summary — the prompt and the schema decide whether
+the text is interface or conversation. Editing the sentence afterwards is the
+wrong layer.
 
 ## The worked case
 
-MISHIRUBE estimates a meal from a photo. `lib/backend/ai/meal_draft_json.dart`
-asks for `{"items":[…],"notes":[…]}` with the field described as
-`"照片看不出來、但會影響數字的地方"` and the rule 「看不見的油、醬汁、滷汁、糖寫在
-notes，一句一件事，最多三句；不要假裝看得到。」 The screen came back with:
+A nutrition app asked for `{"items":[…],"notes":[…]}` with the field
+described as 「照片看不出來、但會影響數字的地方」 and the rule 「一句一件事，最多三
+句；不要假裝看得到」. The screen showed:
 
 ```
 切片後果肉表面略微氧化，份量以碗中約 8–10 片的視覺大小估算。
@@ -18,41 +17,53 @@ notes，一句一件事，最多三句；不要假裝看得到。」 The screen 
 碗與叉子本身不計入營養。
 ```
 
-Every rule was followed as written — three notes, one thing each, nothing
-claimed that the photo does not show — and the result is still wrong. Nothing
-here changes what the reader does with 104 kcal. The instruction named a
-*place* (things the photo cannot show) rather than a *test* (does this change
-how the figure is read), and a model fills a place.
+Every rule was followed. The instruction named a *place* (things the photo
+cannot show) and a model fills a place. It needed a *test*: does this change
+how the figure is read?
 
-## Four levers, in order of effect
+## Four levers
 
-1. **Give the field a test, not a topic.** "Write what the photo cannot show"
-   invites an observation log. "Write only what changes the number next to
-   it; if nothing does, return an empty list" invites a decision.
-2. **Show what not to write.** Models follow counter-examples far more
-   reliably than prohibitions. Two or three sentences of the kind above,
-   labelled as wrong and why, do more than another adjective in the rule.
+1. **Give the field a test, not a topic.** 「只寫會改變數字怎麼讀的事；沒有就回傳
+   []」. Say that empty is the usual answer.
+2. **One contrastive pair, with the difference named.** 「✓ 醬汁未確認 — 使用者
+   可以補上；✗ 未見額外添加醬料 — 照片看不到不等於沒有」. Not a list of bad
+   sentences: a list teaches the sentences, and a list of good examples primes
+   content when there is nothing to say (measured: a table of positive examples
+   filled 67% of notes that should have been empty).
 3. **Budget the fields.** A free-text field with no stated reader will be
-   filled. Prefer: a source field that holds a name, a note field capped at
-   two clauses and allowed to be empty, and no field whose only purpose is
-   commentary. `請核對` belongs to a confirm step, not to a label.
-4. **Filter after generation.** The app already trusts the model's JSON; the
-   same place can drop a note that matches the apparatus/absence patterns the
-   linter knows (`scripts/microcopy_lint.py`, rules `apparatus-disclaimer`
-   and `absence-disclaimer`). Keep the filter narrow — a legitimately deleted
-   note is a silent loss, so only patterns that cannot carry information
-   qualify.
+   filled. Give the note a cap of two clauses and an allowed empty value; put
+   the source in a source field; put the estimate label in the schema, not in
+   prose; never ask the model for a confidence or a ± range — verbalised
+   confidence is badly calibrated and a made-up range is worse than none
+   ([uncertainty.md](uncertainty.md)).
+4. **Filter after generation, narrowly.** Drop a note that matches the
+   apparatus / absence / provenance patterns the linter knows
+   (`apparatus-disclaimer`, `absence-disclaimer`, `provenance-meta`). Keep it
+   narrow: a filtered note is a silent loss, and in measurement the filter
+   caught the apparatus sentences but not the coaching ones — it is a backstop,
+   not the fix.
 
-## The instruction block
+## What the notes field should say, by situation
+
+| Situation | Note |
+| --- | --- |
+| Nothing hidden, nothing ambiguous | （empty） |
+| Sauce or oil present but unquantified | 醬汁未確認 |
+| Portion could not be judged from the photo | 份量依一般份量估計 |
+| User's own words override the photo | （nothing — the user knows what they said） |
+| Part of the input was unusable | 約 40 秒錄音聽不清楚 |
+
+Never: what was not seen, the container, the method, a caution to check, a
+defence of the number, a restatement of the figures already shown.
+
+## The block
 
 [../assets/runtime-prompt-block.zh-TW.md](../assets/runtime-prompt-block.zh-TW.md)
-holds the block to paste into an app's system prompt, written in the same
-register as the app's own prompt. Insert it next to the output-format section
-so it governs the fields rather than the task.
+is the paste-in text. Insert it beside the output-format section so it
+governs the fields rather than the task.
 
-## Checking the result
+## Checking
 
-Run the harness in `ui-microcopy-eval`: it sends the same app-shaped prompt
-without and with this contract, across several models, and scores the fields
-with the linter. That is the difference between "the prompt looks better" and
-"the notes field is empty when it should be".
+Run the held-out harness (`ui-microcopy-eval`, v2) with the `patched` arm on
+the app's own prompt; the note-emptiness table tells you whether the field
+contract works before you ship it.

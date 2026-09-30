@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lint user-visible UI strings for register, brevity and zh-TW usage.
+"""Lint user-visible UI strings for register, brevity and zh-TW usage (v2).
 
 The linter is the mechanical half of the ui-microcopy skill: it catches the
 patterns that a language model falls into when it writes interface text in the
@@ -68,6 +68,9 @@ LENGTH_CAP = {
 }
 
 CJK = r"㐀-鿿豈-﫿"
+
+# Terms that are Taiwan's own although they contain a mainland-looking piece.
+TW_WHITELIST = ("伺服器端", "使用者端", "數據機", "用戶端", "租用戶", "帳號", "註冊")
 
 # Vocabulary that is Taiwan's, not mainland China's. ``error`` for pairs where
 # the mainland term is simply the wrong word in a Taiwanese interface;
@@ -194,11 +197,27 @@ RULES: tuple[Rule, ...] = (
     ),
     Rule(
         "boilerplate-disclaimer",
+        "error",
+        frozenset({"value", "label", "note", "ai-note"}),
+        re.compile(r"僅供參考|請核對|請對照[^。]{0,6}核對|請自行(判斷|確認|核對)|請放心|貼心提醒|小提醒|提醒您"),
+        "A caution that every row could carry, so this row learns nothing from it.",
+        "Write the estimate label and the correctable rows instead: 「估計」, 「醬料 未確認 ［補充］」. A check belongs to the confirm step as an action, not to the value.",
+    ),
+    Rule(
+        "boilerplate-disclaimer",
         "warn",
-        frozenset({"status", "error", "value", "label", "note", "ai-note", "empty"}),
+        frozenset({"status", "error", "empty", "dialog-body"}),
         re.compile(r"僅供參考|請核對|請自行(判斷|確認|核對)|請注意|貼心提醒|小提醒|提醒您|請放心"),
-        "Boilerplate caution that every screen could carry, so none of it informs.",
-        "Keep it only if this one value can mislead; otherwise delete.",
+        "Boilerplate caution.",
+        "Keep it only if this one message can mislead; otherwise state the condition and the next step.",
+    ),
+    Rule(
+        "self-estimated-range",
+        "warn",
+        frozenset({"value", "note", "ai-note"}),
+        re.compile(r"[±]\s*\d|約\s*[±]|信心\s*\d+\s*%|confidence\s*\d+|\d+\s*%\s*(信心|把握|確定)"),
+        "A confidence or ± the model produced itself; verbalised confidence is badly calibrated.",
+        "Show a range only when it comes from measured error; otherwise the figure with an 「估計」 label.",
     ),
     Rule(
         "hedge-duplication",
@@ -227,8 +246,8 @@ RULES: tuple[Rule, ...] = (
             r"未見|沒看到|看不到|未觀察到|未發現|沒有發現|並未添加|不含額外|沒有額外|"
             r"無法(判斷|確認|辨識|得知)|不確定(是否|有沒有)"
         ),
-        "Reports what was not seen; an interface states what is there.",
-        "Delete, or state the fact that changes the number: 「醬汁另計」.",
+        "Reports what was not seen; a photo not showing X is not evidence of no X.",
+        "Delete, or name what the reader can correct: 「醬汁未確認」 — never 「未見醬料」.",
     ),
     Rule(
         "method-filler",
@@ -342,8 +361,14 @@ def lint_text(role: str, text: str, where: str = "") -> list[Finding]:
                 where,
             )
         )
+    # Taiwan's own terms that contain a mainland-looking substring are masked
+    # before the vocabulary pass, so 伺服器端 does not trip 服務器 and 數據機
+    # does not trip 數據.
+    masked = text
+    for term in TW_WHITELIST:
+        masked = masked.replace(term, "＊" * len(term))
     for severity, pattern, suggestion in CN_TERMS:
-        match = re.search(pattern, text)
+        match = re.search(pattern, masked)
         if match:
             findings.append(
                 Finding(
@@ -430,6 +455,12 @@ SELF_TEST = (
     ("value", "帳號", None),
     ("value", "200 g（170–230 g）", None),
     ("label", "Claude 估算", None),
+    ("note", "醬料未確認", None),
+    ("note", "未見額外添加醬料", "absence-disclaimer"),
+    ("label", "數字來自 Claude 的判讀，請對照包裝核對。", "boilerplate-disclaimer"),
+    ("value", "620 kcal（約 ±100）", "self-estimated-range"),
+    ("label", "伺服器端錯誤", None),
+    ("label", "數據機", None),
 )
 
 
