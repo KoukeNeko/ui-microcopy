@@ -28,8 +28,7 @@ how the figure is read?
 2. **One contrastive pair, with the difference named.** 「✓ 醬汁未確認 — 使用者
    可以補上；✗ 未見額外添加醬料 — 照片看不到不等於沒有」. Not a list of bad
    sentences: a list teaches the sentences, and a list of good examples primes
-   content when there is nothing to say (measured: a table of positive examples
-   filled 67% of notes that should have been empty).
+   content when there is nothing to say.
 3. **Budget the fields.** A free-text field with no stated reader will be
    filled. Give the note a cap of two clauses and an allowed empty value; put
    the source in a source field; put the estimate label in the schema, not in
@@ -39,9 +38,8 @@ how the figure is read?
 4. **Filter after generation, narrowly.** Drop a note that matches the
    apparatus / absence / provenance patterns the linter knows
    (`apparatus-disclaimer`, `absence-disclaimer`, `provenance-meta`). Keep it
-   narrow: a filtered note is a silent loss, and in measurement the filter
-   caught the apparatus sentences but not the coaching ones — it is a backstop,
-   not the fix.
+   narrow: a filtered note is a silent loss, and the filter catches apparatus
+   sentences, not coaching ones — it is a backstop, not the fix.
 
 ## What the notes field should say, by situation
 
@@ -64,6 +62,6 @@ governs the fields rather than the task.
 
 ## Checking
 
-Run the held-out harness (`ui-microcopy-eval`, v2) with the `patched` arm on
-the app's own prompt; the note-emptiness table tells you whether the field
-contract works before you ship it.
+Run the app's own prompt through `ui-microcopy-eval` (`v2/eval_v2.py`,
+`patched` arm); the note-emptiness table tells you whether the field contract
+works before you ship it.

@@ -19,9 +19,7 @@ else. Natural language is fine; a simulated conversation is not.
 Models drift toward the second by default: they write a reply where a label
 should be, add a sentence that reassures or explains, restate what the screen
 already shows, and defend how a number was produced. This skill is the
-procedure, the element contracts, and the checks that hold the line — built
-and measured so that the checks do not simply echo the rules (see
-[README.md](README.md)).
+procedure, the element contracts, and the checks that hold the line.
 
 The doctrine this skill operationalises is `~/.claude/rules/ui-microcopy.md`.
 Read it first; where the two disagree, the rule file wins.
@@ -41,12 +39,10 @@ the brief lists for it. Stop there. The contracts in
 show one accepted and one rejected example per element with the difference
 named.
 
-The order matters: language, facts, then form, then deletion. The first
-version of this skill put deletion first, and on independently written briefs
-it removed required facts from 16% of strings and answered English briefs in
-Chinese up to 82% of the time ([README.md](README.md)).
-A shorter string that lost a fact or switched language is a failure, not a
-success.
+The order matters: language, facts, then form, then deletion. Deletion put
+first removes required facts and pulls the answer into the language of the
+examples. A shorter string that lost a fact or switched language is a
+failure, not a success.
 
 ## The procedure
 
@@ -85,8 +81,8 @@ machine, so they live in the linter as much as here.
 | 10 | Calibration | If the value is an estimate, does the string still say so, and does the reader know what they can correct? See [references/uncertainty.md](references/uncertainty.md). |
 
 Test 9 is last on purpose. Applied first, it removes facts (test 2) and
-teaches the model to answer in the language of the examples (test 1); the
-first version of this skill did both. Applied to a note or a control it is
+teaches the model to answer in the language of the examples (test 1). Applied
+to a note or a control it is
 right; applied to an onboarding body it deletes copy nobody minded.
 
 ## Where the string comes from changes the fix
@@ -115,10 +111,9 @@ It is not a ban on tone. Onboarding and marketing surfaces may carry warmth;
 errors, statuses, labels and transactional controls carry none. It is not a
 ban on uncertainty: an estimate stays labelled as one, a range stays with its
 figure, and the assumption a reader can correct stays visible. And it is not
-a licence to shorten: the measured cost of a deletion-first skill was lost
-facts and switched languages, and the person who asked for this skill, rating
-blind, did not object to a benefit clause, an example in an error, or an
-exclamation mark — they objected to claims the brief never made. What goes is
+a licence to shorten: deletion first costs facts and language. A benefit
+clause in onboarding, an example inside an error, an exclamation mark on a
+confirmation are not the problem; a claim the brief never made is. What goes is
 the clause that carries no information *and* the clause that carries
 information the brief did not give.
 
@@ -143,7 +138,6 @@ writing strings by hand.
 - [references/uncertainty.md](references/uncertainty.md) — what goes next to an estimated number: required, conditional, never
 - [references/runtime-llm-output.md](references/runtime-llm-output.md) — field contracts for in-app models
 - [references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) — Taiwan usage, two tiers, with a software-context whitelist
-- [README.md](README.md) — for people: the evidence behind the rules and how the skill was measured; not loaded at run time
 - [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) — paste-in block
 - [scripts/microcopy_lint.py](scripts/microcopy_lint.py) — the CI check
 

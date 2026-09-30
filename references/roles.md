@@ -7,7 +7,7 @@ model for the answer. Decide the element, write in its form, then judge the
 wording. Each element
 below has its form, its voice budget, and one contrastive pair with the
 difference named — one pair, because a list of bad strings teaches the bad
-strings (the evidence is in README.md §2–3).
+strings.
 
 ## Contracts
 
@@ -115,10 +115,9 @@ Voice: none.
 - Difference: the ✓ keeps every fact the brief asked for and adds none; the
   ✗ either drops a required fact in the name of brevity or adds an
   observation nobody needs. The note examples are written with 〔slots〕 on
-  purpose: in measurement, a concrete example (「醬汁未確認」, then 「烹調油未
-  確認」) was pasted verbatim into briefs about a different ingredient, and a
-  model with an example and nothing to say wrote 「無油」. Fill the slot from
-  the brief; when nothing fills it, the note is empty.
+  purpose: a concrete example gets pasted verbatim into a brief about a
+  different ingredient, and an example with nothing to say becomes 「無油」.
+  Fill the slot from the brief; when nothing fills it, the note is empty.
 
 ### title — the name of the screen or step
 
@@ -136,9 +135,8 @@ Voice: onboarding titles may be warm; screen titles are names.
   chart that shows exactly that) passes every register test and still fails
   the Visible test. A note says the one thing the figures do not.
 - **Over-deletion.** A writer who has learned to delete will delete the cause
-  from an error or the fact from a note. The Facts test is not optional; in
-  measurement, the arm that deleted most also lost the most required facts
-  (see README.md).
+  from an error or the fact from a note. The Facts test is not optional: the
+  writer that deletes most loses the most required facts.
 
 ## Voice budget by surface
 
