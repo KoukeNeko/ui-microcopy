@@ -1,8 +1,8 @@
 <h1 align="center">ui-microcopy</h1>
 
 <p align="center">
-  <strong>一份 Claude Code skill 加一支 linter，讓介面字串讀起來像介面。</strong><br>
-  按鈕、狀態、錯誤、空狀態、數值列、備註、對話框文案——正體中文（台灣）、英文、日文。
+  <strong>介面字串的 Claude Code skill 與 linter。</strong><br>
+  適用於按鈕、狀態、錯誤、空狀態、數值列、備註、對話框文案；正體中文（台灣）、英文、日文。
 </p>
 
 <p align="center">
@@ -16,12 +16,12 @@
 </p>
 
 <p align="center">
-  <a href="#開始使用">開始使用</a>
-  · <a href="SKILL.md">skill 本體</a>
+  <a href="#安裝">安裝</a>
+  · <a href="SKILL.md">SKILL.md</a>
   · <a href="references/roles.md">元件契約</a>
   · <a href="references/zh-tw-lexicon.md">台灣用語</a>
   · <a href="#linter">linter</a>
-  · <a href="#量測方式">量測</a>
+  · <a href="#量測">量測</a>
 </p>
 
 ```sh
@@ -38,87 +38,92 @@ app_zh.arb: error: '當前設定已保存。' [zh-tw-vocabulary] 「當前」 is
 3 strings, 3 errors, 0 warnings
 ```
 
-請語言模型寫一個按鈕，它寫的是一句回話。請它寫狀態，它用人講話的方式報告（「裝好了」）。請它寫估計數字旁的備註，它替數字的來歷辯護（「碗與叉子本身不計入營養」「數字不是推測」）。這些都不是文法錯，而是聊天回答的語域滲進了只該做一件事的欄位。這個 repo 放的是擋住它的程序，以及程序漏掉時抓得到的檢查。
+## 簡介
 
-**skill 是寫作程序。** 十項測試、固定順序——語言、事實、不捏造，然後才是元件的形式，最後才是刪減；每個元件一組成對範例，並寫出差異在哪。順序本身就是重點：把「刪減」放最前面的 skill 會刪掉必要事實、把英文題寫成中文；這一版正是量到這件事之後重寫的。
+語言模型產生的介面字串常帶有對話回覆的語域：按鈕寫成回話（「算了」）、狀態寫成口語報告（「裝好了」）、估計值旁的備註寫成對數值來歷的說明（「碗與叉子本身不計入營養」「數字不是推測」）。這些字串在文法上沒有錯誤，問題在於語域：對話回覆的寫法進入了只承擔單一功能的欄位。
 
-**linter 是保證。** 模型會犯的樣式（回話用語、口語完成式、「我們」、來源辯護、器材與缺席免責、驚嘆號、中國用語）寫成規則，吃 TSV、JSON、JSONL、Flutter ARB 或純文字，用結束碼把關 CI。它刻意做成純規則，所以人、pipeline、評測工具看到的是同一份結果。
+本 repo 包含兩部分：
 
-## 它做什麼
+- **skill**：寫作程序。十項測試依固定順序執行——語言、事實、不捏造、元件形式、刪減——每個元件附一組對照範例並標明差異。順序是設計重點：以刪減為首的程序會刪除必要事實，並使英文題目的回答轉為中文；本版依此量測結果重寫。
+- **linter**：規則式檢查。涵蓋模型常見的樣式（回話用語、口語完成式、「我們」、來源說明、器材與缺席免責、驚嘆號、中國用語），接受 TSV、JSON、JSONL、Flutter ARB 與純文字，以結束碼供 CI 把關。規則式的設計使人工檢查、pipeline 與評測工具得到相同結果。
 
-### 每個元件用自己的形式寫
+## 功能
 
-每條使用者看得到的字串只有一件工作：命名一個動作、陳述一個狀態、標記一個數字，或給出那一件會改變數字怎麼讀的事實。[references/roles.md](references/roles.md) 給每個元件它的形式、語氣額度，以及一組 ✓／✗ 範例：
+### 元件契約
+
+每條介面字串承擔單一功能：命名動作、陳述狀態、標記數值，或提供改變數值解讀方式的事實。[references/roles.md](references/roles.md) 為每個元件定義形式、語氣額度與一組 ✓／✗ 範例：
 
 | 元件 | 形式 | 語氣 |
 | --- | --- | --- |
-| button | 動作的名字——動詞片語，沒有人稱，不是問句 | 無 |
-| dialog-title | 要做的決定；只有按鈕能回答時才用問句 | 無 |
-| dialog-body | 後果，說一次，不重複畫面上已有的 | 低 |
-| status | 收尾的狀態——已儲存 / Export complete / 保存しました | 無 |
-| error | 發生什麼、知道的話說原因、有的話說下一步 | 無 |
-| empty | 「沒有東西」這個狀態；動作留在控制項上 | 無 |
-| label | 東西的名字；設定項寫的是開啟後會怎樣 | 無 |
-| value | 數字、單位、範圍、目標——不確定性由數字與版面承載 | 無 |
-| note | 題目給的事實，一件一句，沒有就空 | 無 |
-| title | 畫面或步驟的名字 | onboarding 可以溫暖 |
+| button | 動作名稱；動詞片語，無人稱，非問句 | 無 |
+| dialog-title | 待決定的事項；僅在按鈕可作答時使用問句 | 無 |
+| dialog-body | 後果，敘述一次，不重複畫面已有資訊 | 低 |
+| status | 收尾狀態：已儲存 / Export complete / 保存しました | 無 |
+| error | 發生的事、已知的原因、可行的下一步 | 無 |
+| empty | 「無內容」狀態；動作留在既有控制項 | 無 |
+| label | 事物名稱；設定項描述開啟時的行為 | 無 |
+| value | 數值、單位、範圍、目標；不確定性由數值與版面呈現 | 無 |
+| note | 題目提供的事實，一件一句；無事實則留空 | 無 |
+| title | 畫面或步驟名稱 | onboarding 可用溫和語氣 |
 
-平台慣例——Apple HIG 的大小寫與固定名稱、Material 的 sentence case、tap 與 click——放在同一個檔案的末尾，只改大小寫、幾個固定名稱與手勢動詞。
+平台慣例（Apple HIG 的大小寫與固定名稱、Material 的 sentence case、tap 與 click 的區分）列於同一檔案末尾，只影響大小寫、固定名稱與手勢動詞。
 
-### 說清楚估計值旁邊該放什麼
+### 不確定性政策
 
-[references/uncertainty.md](references/uncertainty.md) 把「要不要加免責」拆成三層：估計的身分與讀者可以修正的假設是**必要**；範圍要看有沒有校準，是**有條件**；器材說明、缺席說明、樣板警語、自我辯護、模型自估的信心數字，**一律不放**。依據是不確定性溝通的文獻，不是品味。
+[references/uncertainty.md](references/uncertainty.md) 將估計值旁的說明分為三層：估計身分與可修正的假設為必要；範圍以校準為條件；器材說明、缺席說明、樣板警語、自我辯護與模型自估的信心數值不列入。依據為不確定性溝通的研究文獻。
 
-### 用台灣的詞
+### 台灣用語
 
-[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) 是 40 組詞，依畫面領域分組——儲存、網路、裝置、媒體、帳號、動作——每組附它指的概念，另有軟體語境白名單（帳號、用戶端、租用戶、餐廳的菜單），台灣自己的詞不會被「改正」。skill 要 agent 挑出這個畫面會用到的那幾列，而不是讀整張表：在刻意誘發漂移的題目上量測，只給相關的兩三列讓標準台灣詞的使用率從 43% 升到 66%；整張表只到 51%；單獨一句「不用中國用語」是唯一讓結果變差的條件。
+[references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) 收錄 40 組詞，依畫面領域分組（儲存、網路、裝置、媒體、帳號、動作），每組附對應概念，並設軟體語境白名單（帳號、用戶端、租用戶、餐廳菜單）。skill 要求 agent 只取出目前畫面相關的列，不讀取整表。量測結果：在誘發漂移的題目上，提供相關的 1–3 列使標準台灣詞使用率由 43% 升至 66%；提供整表為 51%；僅提供一句「不用中國用語」的否定指示是唯一使結果變差的條件。
 
-### app 內的模型寫字串時，修的是 prompt
+### app 內模型的欄位契約
 
-字串來自執行時的模型時——照片估算的備註、AI 摘要——要修的是欄位契約，不是文句。[references/runtime-llm-output.md](references/runtime-llm-output.md) 是契約，[assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 是可直接貼的區塊：每個欄位一組成對範例、允許空值、來源放自己的欄位、不要求信心或 ± 範圍。
+字串由執行時的模型產生時（照片估算的備註、AI 摘要），修正對象是欄位契約而非文句。[references/runtime-llm-output.md](references/runtime-llm-output.md) 定義契約，[assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 為可直接使用的 prompt 區塊：每個欄位一組對照範例、允許空值、來源獨立欄位、不要求信心或 ± 範圍。
 
-### 各種做法比一比
+### 與其他做法的比較
 
-依量測結果，各部分在哪裡有效：
+依量測結果整理各方法的適用範圍：
 
-|                              | 只有規則檔 | 這個 skill | CI 裡的 linter | zhtw MCP |
-| ---------------------------- | :--------: | :--------: | :------------: | :------: |
-| 人手寫字串                   |     ⚠️     |     ✅     |       ✅       |    —     |
-| agent 在 coding session 寫字串 |     ⚠️     |     ✅     |       ✅       |    —     |
-| app 內的模型                 |     —      |     ✅     |       ⚠️       |    —     |
-| 抓到「當前」「保存」          |     —      |     ⚠️     |       ✅       |    —     |
-| 保留必要事實                 |     ⚠️     |     ✅     |       —        |    —     |
-| 維持題目的語言               |     ⚠️     |     ✅     |       —        |    —     |
-| 長文的翻譯腔與標點           |     —      |     —      |       —        |    ✅    |
+|                              | 僅規則檔 | 本 skill | CI 中的 linter | zhtw MCP |
+| ---------------------------- | :------: | :------: | :------------: | :------: |
+| 人工撰寫字串                 |    ⚠️    |    ✅    |       ✅       |    —     |
+| agent 於 coding session 撰寫 |    ⚠️    |    ✅    |       ✅       |    —     |
+| app 內模型                   |    —     |    ✅    |       ⚠️       |    —     |
+| 偵測「當前」「保存」          |    —     |    ⚠️    |       ✅       |    —     |
+| 保留必要事實                 |    ⚠️    |    ✅    |       —        |    —     |
+| 維持題目語言                 |    ⚠️    |    ✅    |       —        |    —     |
+| 長文的翻譯腔與標點           |    —     |    —     |       —        |    ✅    |
 
-agent 本來就帶著的規則檔是這個 skill 的弱化版（評測裡的「rules」arm 就是它）。linter 抓的是五十條裡一條、讀的人和模型都不會注意到的用語失誤。zhtw MCP 是長文工具：對上面那幾條字串它什麼都沒報。
+規則檔為本 skill 的簡化版本（評測中的 rules arm）。linter 負責偵測發生率約 2% 的用語錯誤，此類錯誤不易由人工閱讀或模型自檢發現。zhtw MCP 針對長篇文字；對上列字串未回報任何問題。
 
-## 開始使用
+## 安裝
 
-1. **安裝**，用 [Skills CLI](https://github.com/vercel-labs/skills)（Node 18+），對所有專案生效：
+使用 [Skills CLI](https://github.com/vercel-labs/skills)（Node 18 以上），安裝至使用者層級：
 
-   ```sh
-   npx skills add KoukeNeko/ui-microcopy -g -a claude-code
-   ```
+```sh
+npx skills add KoukeNeko/ui-microcopy -g -a claude-code
+```
 
-   拿掉 `-g` 就裝進目前專案的 `.claude/skills/`；拿掉 `-a` 讓 CLI 列出它偵測到的所有 agent（Codex、Cursor、OpenCode 等讀的是同一份 `SKILL.md`）。私有 repo 用你已經設好的 git 憑證。之後用 `npx skills update` 更新。沒有 Node 就直接 clone：
+省略 `-g` 則安裝至目前專案的 `.claude/skills/`；省略 `-a` 則由 CLI 列出偵測到的 agent（Codex、Cursor、OpenCode 等讀取同一份 `SKILL.md`）。私有 repo 使用既有的 git 憑證。更新：`npx skills update`。
 
-   ```sh
-   git clone https://github.com/KoukeNeko/ui-microcopy.git ~/.claude/skills/ui-microcopy
-   ```
+不使用 Node 時，直接 clone：
 
-   寫或審 UI 文字、命名控制項、措辭錯誤或確認訊息、寫 app 內模型的 prompt 時，skill 會自己觸發。
+```sh
+git clone https://github.com/KoukeNeko/ui-microcopy.git ~/.claude/skills/ui-microcopy
+```
 
-2. **寫。** 給題目——畫面、元件、字串必須帶的事實、語言——skill 用元件的形式回答。回答前它自己跑的最後檢查：
+## 使用
+
+1. **撰寫字串。** 撰寫或審閱 UI 文字、命名控制項、撰寫錯誤或確認訊息、撰寫 app 內模型的 prompt 時，skill 自動觸發。輸入為題目：畫面、元件、字串必須包含的事實、語言。回答前的最後檢查：
 
    ```text
-   1. 語言與題目相同？
-   2. 題目列的每個事實都還在？
-   3. 元件形式正確，而且沒有多的？
-   4. 字串在檔案裡 → 跑 linter，修它報的。
+   1. 語言與題目相同
+   2. 題目列出的事實皆保留
+   3. 元件形式正確，無多餘內容
+   4. 字串位於檔案時，執行 linter 並修正回報項目
    ```
 
-3. **Lint** app 實際出貨的字串，放 CI 或 pre-commit。沒有 error 結束碼是 0，否則是 1；`--strict` 連 warning 也擋：
+2. **檢查字串。** 於 CI 或 pre-commit 執行 linter。無 error 時結束碼為 0，否則為 1；`--strict` 將 warning 一併視為失敗：
 
    ```sh
    python3 scripts/microcopy_lint.py --format arb lib/l10n/app_zh.arb
@@ -126,9 +131,9 @@ agent 本來就帶著的規則檔是這個 skill 的弱化版（評測裡的「r
    python3 scripts/microcopy_lint.py --format json --json strings.json
    ```
 
-   TSV 每行 `role<TAB>text`；JSON 與 JSONL 是 `{"role": ..., "text": ...}` 物件；純文字每行一條，角色為 `generic`。角色：`button`、`dialog-title`、`dialog-body`、`title`、`label`、`status`、`error`、`empty`、`value`、`note`、`ai-note`、`generic`。
+   輸入格式：TSV 每行 `role<TAB>text`；JSON 與 JSONL 為 `{"role": ..., "text": ...}` 物件；純文字每行一條，角色為 `generic`。角色：`button`、`dialog-title`、`dialog-body`、`title`、`label`、`status`、`error`、`empty`、`value`、`note`、`ai-note`、`generic`。
 
-4. **約束 app 內的模型。** 把 [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 貼在 app prompt 的輸出格式段落旁，讓它管欄位；再把 app 自己的 prompt 丟進[評測工具](https://github.com/KoukeNeko/ui-microcopy-eval)——備註非空率那張表會在出貨前告訴你欄位契約有沒有用。
+3. **約束 app 內模型。** 將 [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) 置於 app prompt 的輸出格式段落旁；以[評測工具](https://github.com/KoukeNeko/ui-microcopy-eval)執行 app 的 prompt，依備註非空率表確認欄位契約是否生效。
 
 ## linter
 
@@ -137,71 +142,71 @@ python3 scripts/microcopy_lint.py --list-rules
 python3 scripts/microcopy_lint.py --self-test
 ```
 
-| 規則 | 等級 | 抓什麼 |
+| 規則 | 等級 | 偵測對象 |
 | --- | --- | --- |
-| `chatty-lexicon` | error | 該是控制項或狀態的地方寫成兩個人的回話（算了、裝好了） |
-| `completion-slang` | error | 用口語報告完成，而不是收尾形式 |
-| `we-voice` | error | 介面以「我們」發言 |
-| `second-person` | warn | 不需要區分歸屬的「你的」 |
-| `question-label` | error | 控制項問問題而不是命名動作 |
-| `provenance-meta` | error | 字串替數值的來歷辯護（「數字不是推測」） |
-| `apparatus-disclaimer` | error | 解釋器材（「碗與叉子本身不計入營養」） |
-| `absence-disclaimer` | warn | 把「沒看到」當成證據來報告 |
-| `boilerplate-disclaimer` | error / warn | 每一列都能掛的警語 |
-| `self-estimated-range` | warn | 模型自己產生的信心或 ± |
-| `hedge-duplication` | warn | 已是估計值又用文字再說一次 |
-| `method-filler` | warn | 在被當成結果讀的備註裡描述方法 |
+| `chatty-lexicon` | error | 控制項或狀態位置的對話回覆（算了、裝好了） |
+| `completion-slang` | error | 口語形式的完成報告 |
+| `we-voice` | error | 以「我們」發言的介面 |
+| `second-person` | warn | 無需區分歸屬的「你的」 |
+| `question-label` | error | 以問句取代動作名稱的控制項 |
+| `provenance-meta` | error | 對數值來歷的說明（「數字不是推測」） |
+| `apparatus-disclaimer` | error | 器材說明（「碗與叉子本身不計入營養」） |
+| `absence-disclaimer` | warn | 將「未見」作為證據的陳述 |
+| `boilerplate-disclaimer` | error / warn | 適用於任何列的警語 |
+| `self-estimated-range` | warn | 模型自行產生的信心或 ± |
+| `hedge-duplication` | warn | 已為估計值再以文字表達不確定 |
+| `method-filler` | warn | 於結果性備註中描述方法 |
 | `redundant-qualifier` | warn | 範圍前的「約」、斜線後的「上限」 |
-| `exclamation-emoji` | error | 例行、錯誤、破壞性狀態不該有的語氣 |
-| `punctuation-form` | warn | 中文句子裡的半形標點 |
+| `exclamation-emoji` | error | 例行、錯誤、破壞性狀態不適用的語氣 |
+| `punctuation-form` | warn | 中文句中的半形標點 |
 | `trailing-period` | warn | 標籤結尾的句號 |
-| `role-length` | warn | 一條字串做兩件事 |
-| `zh-tw-vocabulary` | error / warn | 中國用語，先遮掉台灣白名單再比對 |
+| `role-length` | warn | 超出角色長度上限的字串 |
+| `zh-tw-vocabulary` | error / warn | 中國用語；比對前先遮蔽台灣白名單 |
 
-規則與範例在同一個檔案 `scripts/microcopy_lint.py`，除了 Python 3 沒有相依套件。`--self-test` 用範例逐條檢查規則。
+規則與範例位於 `scripts/microcopy_lint.py`，除 Python 3 外無相依套件。`--self-test` 以範例逐條驗證規則。
 
-## 量測方式
+## 量測
 
-這個 skill 的第一版替自己打分：評分器四分之三的禁止字串就在 skill 內文裡。現在這一版用 32 題 held-out 題目量測——由兩位沒看過 skill 的出題者寫成，跑七條模型管道，由兩個異家族的 judge 在兩軸各評 0／1（沒有多餘、必要事實齊全），配對分析加以題為叢集的 bootstrap，並以 108 條人工盲評校準。
+第一版 skill 的評分器與 skill 共用文字：評分器四分之三的禁止字串出現於 skill 內文。本版以 32 題 held-out 題目量測，題目由兩位未接觸 skill 的出題者撰寫，涵蓋七條模型管道；由兩個異家族 judge 於兩軸評分（無多餘、必要事實齊全），採配對分析與以題為叢集的 bootstrap，並以 108 條人工盲評校準。
 
 | | 對 control 的淨通過差 | Δ 必要事實 |
 | --- | --- | --- |
-| 第一版，Claude 出的題 | +16 pp | −0.3 pp |
-| 第一版，GPT 出的題 | −5 pp | −15.7 pp |
-| **這一版，全部題目，judge A** | **+8 pp [+1, +15]** | −3.4 pp |
-| **這一版，全部題目，judge B** | **+8 pp [+1, +15]** | +1.1 pp |
+| 第一版，Claude 出題 | +16 pp | −0.3 pp |
+| 第一版，GPT 出題 | −5 pp | −15.7 pp |
+| **本版，全部題目，judge A** | **+8 pp [+1, +15]** | −3.4 pp |
+| **本版，全部題目，judge B** | **+8 pp [+1, +15]** | +1.1 pp |
 
-第一版還把 41–82% 的英文回答拉成中文；這一版 0–15%。題目沒列任何事實的備註，未加干預的模型有 88% 會填東西，這一版 0%。這些是開發過程的數字——語言修正是看了第一稿的結果才改的——驗證性的量測需要凍結的 skill 與沒人看過的題目。評測工具、題目、生成檔與判定檔在 [ui-microcopy-eval](https://github.com/KoukeNeko/ui-microcopy-eval)。
+英文題目回答含中文的比例：第一版 41–82%，本版 0–15%。題目未列事實的備註：未加干預的模型 88% 填入內容，本版 0%。以上為開發階段的數字；語言修正於第一稿結果之後進行，驗證性量測需凍結的 skill 與未使用過的題目。評測工具、題目、生成檔與判定檔位於 [ui-microcopy-eval](https://github.com/KoukeNeko/ui-microcopy-eval)。
 
-## 規則從哪裡來
+## 規則依據
 
-下面每一筆來源都開過原文核對——題名、作者、出處、引用的主張——才拿來用；沒有任何規則建立在找不到的文獻上。契約與既有的指引一致，並補上它們沒明說的：Apple Human Interface Guidelines（Writing、Alerts）、Material 3 的 UX writing 指南、Microsoft 的繁中風格指南、GOV.UK 的內容指引、教育部《兩岸常用詞語對照表》、MDN 與 MozTW 的 zh-TW 翻譯指南、數位發展部《政府網站服務管理規範》。不確定性政策依據不確定性溝通的文獻（數字範圍幾乎不損信任、口語式的模糊損失很大；免責會習慣化；口語化的信心校準很差）。反例與順序的決定依據指令遵循文獻與這個 skill 自己的量測。完整清單在[參考文獻](#參考文獻)。
+所有來源均已開啟原文核對題名、作者、出處與引用主張。契約與既有指引一致，並補充其未明述之處：Apple Human Interface Guidelines（Writing、Alerts）、Material 3 UX writing 指南、Microsoft 繁體中文風格指南、GOV.UK 內容指引、教育部《兩岸常用詞語對照表》、MDN 與 MozTW 的 zh-TW 翻譯指南、數位發展部《政府網站服務管理規範》。不確定性政策依據不確定性溝通文獻（數值範圍對信任影響小、口語模糊影響大；免責聲明會習慣化；口語化信心校準不佳）。反例形式與測試順序依據指令遵循文獻與本 skill 的量測。完整清單見[參考文獻](#參考文獻)。
 
 ## 檔案配置
 
 ```text
 SKILL.md                              程序、十項測試、最後檢查
 references/
-  roles.md                            元件契約，每個一組 ✓/✗，平台慣例
-  uncertainty.md                      估計值旁該放什麼
+  roles.md                            元件契約、✓/✗ 範例、平台慣例
+  uncertainty.md                      估計值旁的說明政策
   zh-tw-lexicon.md                    依畫面領域分組的台灣用語、白名單、標點
   runtime-llm-output.md               app 內模型的欄位契約
 assets/
-  runtime-prompt-block.zh-TW.md       貼進那個模型 prompt 的區塊
+  runtime-prompt-block.zh-TW.md       app 內模型 prompt 的區塊
 scripts/
   microcopy_lint.py                   linter；--self-test、--list-rules
 ```
 
 ## 限制
 
-- 量測是 32 題、每題 2 次抽樣：看得到十個百分點以上的效果，看不到更細的。人工評分只有一位，也是提出抱怨的人。
-- 詞表 40 組。它抓的是模型在軟體文案裡真的會滑掉的詞，不是中國與台灣用語的全部差異；第二層（提交、點擊、保存、設置）只 warn，因為要看語境。
-- 日文與英文的契約有範例，但除了評測裡各六題之外沒有自己的 held-out 量測。
-- skill 只有文字。它看不到畫面；「畫面上已有」的測試靠題目說明畫面上有什麼。
+- 量測規模為 32 題、每題 2 次抽樣，可偵測十個百分點以上的效果。人工評分者一位，為問題提出者本人。
+- 詞表 40 組，涵蓋模型於軟體文案中實際出現的用語，非中國與台灣用語的完整差異；第二層（提交、點擊、保存、設置）僅 warn。
+- 日文與英文契約附範例，held-out 量測各僅六題。
+- skill 僅處理文字，無法取得畫面；「畫面已有資訊」的判斷依賴題目說明。
 
 ## 參考文獻
 
-128 筆來源，依字母排序。廠商文件與開源討論和論文一樣逐筆核對；數字取自摘要而非內文的，skill 的證據檔有註記。
+128 筆來源，依字母排序。廠商文件與開源討論與論文採相同核對標準；數值取自摘要而非內文者，於 skill 的證據檔註記。
 
 <details>
 <summary>Show all 128</summary>
