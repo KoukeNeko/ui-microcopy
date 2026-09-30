@@ -3,7 +3,7 @@
 The instinct that produced 「數字僅供參考，請核對」「碗與叉子本身不計入營養」
 「數字不是推測」 was a good one — the number is uncertain and the reader should
 know. The sentences were the wrong form of it. This page is the policy, with
-the evidence behind each line in [why.md](why.md) §6.
+the evidence behind each line in README.md §6.
 
 ## Required
 

@@ -7,7 +7,7 @@ model for the answer. Decide the element, write in its form, then judge the
 wording. Each element
 below has its form, its voice budget, and one contrastive pair with the
 difference named — one pair, because a list of bad strings teaches the bad
-strings (the evidence is in [why.md](why.md) §2–3).
+strings (the evidence is in README.md §2–3).
 
 ## Contracts
 
@@ -138,7 +138,7 @@ Voice: onboarding titles may be warm; screen titles are names.
 - **Over-deletion.** A writer who has learned to delete will delete the cause
   from an error or the fact from a note. The Facts test is not optional; in
   measurement, the arm that deleted most also lost the most required facts
-  (see [evaluation.md](evaluation.md)).
+  (see README.md).
 
 ## Voice budget by surface
 

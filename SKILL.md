@@ -21,7 +21,7 @@ should be, add a sentence that reassures or explains, restate what the screen
 already shows, and defend how a number was produced. This skill is the
 procedure, the element contracts, and the checks that hold the line — built
 and measured so that the checks do not simply echo the rules (see
-[references/evaluation.md](references/evaluation.md)).
+[README.md](README.md)).
 
 The doctrine this skill operationalises is `~/.claude/rules/ui-microcopy.md`.
 Read it first; where the two disagree, the rule file wins.
@@ -44,7 +44,7 @@ named.
 The order matters: language, facts, then form, then deletion. The first
 version of this skill put deletion first, and on independently written briefs
 it removed required facts from 16% of strings and answered English briefs in
-Chinese up to 82% of the time ([references/evaluation.md](references/evaluation.md)).
+Chinese up to 82% of the time ([README.md](README.md)).
 A shorter string that lost a fact or switched language is a failure, not a
 success.
 
@@ -141,11 +141,9 @@ writing strings by hand.
 
 - [references/roles.md](references/roles.md) — element contracts, one ✓/✗ pair each, voice budget per surface
 - [references/uncertainty.md](references/uncertainty.md) — what goes next to an estimated number: required, conditional, never
-- [references/failure-modes.md](references/failure-modes.md) — the patterns, with the real strings and the measured rates
 - [references/runtime-llm-output.md](references/runtime-llm-output.md) — field contracts for in-app models
 - [references/zh-tw-lexicon.md](references/zh-tw-lexicon.md) — Taiwan usage, two tiers, with a software-context whitelist
-- [references/why.md](references/why.md) — the evidence, with the sources that were opened and verified
-- [references/evaluation.md](references/evaluation.md) — how the skill was measured and how to re-run it
+- [README.md](README.md) — for people: the evidence behind the rules and how the skill was measured; not loaded at run time
 - [assets/runtime-prompt-block.zh-TW.md](assets/runtime-prompt-block.zh-TW.md) — paste-in block
 - [scripts/microcopy_lint.py](scripts/microcopy_lint.py) — the CI check
 
