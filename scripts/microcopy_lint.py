@@ -69,11 +69,11 @@ LENGTH_CAP = {
 
 CJK = r"㐀-鿿豈-﫿"
 
-# Terms that are Taiwan's own although they contain a mainland-looking piece.
+# Terms that are Taiwan's own although they contain a China-looking piece.
 TW_WHITELIST = ("伺服器端", "使用者端", "數據機", "用戶端", "租用戶", "帳號", "註冊")
 
-# Vocabulary that is Taiwan's, not mainland China's. ``error`` for pairs where
-# the mainland term is simply the wrong word in a Taiwanese interface;
+# Vocabulary that is Taiwan's, not China's. ``error`` for pairs where
+# the China term is simply the wrong word in a Taiwanese interface;
 # ``warn`` where the term survives in some Taiwanese writing and a person
 # should decide.
 CN_TERMS = (
@@ -361,7 +361,7 @@ def lint_text(role: str, text: str, where: str = "") -> list[Finding]:
                 where,
             )
         )
-    # Taiwan's own terms that contain a mainland-looking substring are masked
+    # Taiwan's own terms that contain a China-looking substring are masked
     # before the vocabulary pass, so 伺服器端 does not trip 服務器 and 數據機
     # does not trip 數據.
     masked = text
@@ -376,7 +376,7 @@ def lint_text(role: str, text: str, where: str = "") -> list[Finding]:
                     severity,
                     role,
                     text,
-                    f"「{match.group(0)}」 is mainland usage.",
+                    f"「{match.group(0)}」 is the term used in China.",
                     f"Taiwan writes {suggestion}.",
                     match.group(0),
                     where,
@@ -449,7 +449,7 @@ SELF_TEST = (
     ("status", "當前設定已保存", "zh-tw-vocabulary"),
     ("status", "安裝完成", None),
     ("button", "取消", None),
-    # Taiwan's own terms must not be flagged as mainland usage.
+    # Taiwan's own terms must not be flagged as China usage.
     ("label", "用戶端 ID", None),
     ("label", "租用戶", None),
     ("value", "帳號", None),
@@ -504,7 +504,7 @@ def main(argv: list[str] | None = None) -> int:
         for rule in RULES:
             print(f"{rule.severity:5} {rule.id:24} {rule.message}")
         print(f"{'warn':5} {'role-length':24} per-role length cap")
-        print(f"{'error':5} {'zh-tw-vocabulary':24} mainland Chinese vocabulary")
+        print(f"{'error':5} {'zh-tw-vocabulary':24} China vocabulary")
         return 0
     if args.self_test:
         return self_test()

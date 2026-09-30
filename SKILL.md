@@ -126,7 +126,7 @@ to the blind rater. They came from two specific places: an agent writing an
 installer's strings inside a coding session, and an app's runtime field
 whose instruction named a topic instead of a test. Both are contracts, not
 prose problems. For the first, the linter in CI catches the register slips
-(reply lexicon, exclamation marks, mainland vocabulary, Simplified
+(reply lexicon, exclamation marks, China vocabulary, Simplified
 characters) at commit time; for the second,
 [references/runtime-llm-output.md](references/runtime-llm-output.md) is the
 fix. The writing procedure above is what remains for a person or an agent
