@@ -204,6 +204,7 @@ python3 scripts/microcopy_lint.py --self-test
 | `hedge-duplication` | warn | an estimate hedged again in words |
 | `method-filler` | warn | method described inside a note read as a result |
 | `redundant-qualifier` | warn | 「約」 before a range, 「上限」 after a slash |
+| `negated-alternative` | warn | a case stated, then the alternative it already excludes denied (「顯示「無法取得」，不以 0 站計」) |
 | `exclamation-emoji` | error | tone not applicable to routine, error or destructive states |
 | `punctuation-form` | warn | half-width punctuation in a Chinese sentence |
 | `trailing-period` | warn | a full stop on a label |

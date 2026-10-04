@@ -76,7 +76,7 @@ machine, so they live in the linter as much as here.
 | 5 | Reply | Could this line be one person answering another (算了, 裝好了, an apology, a cheer)? |
 | 6 | Provenance | Does it say how the value was produced, or defend it, instead of what it is? |
 | 7 | Absence | Does it report what was *not* seen, or describe the container, apparatus or setting? |
-| 8 | Visible | Does it restate what the screen already shows? |
+| 8 | Visible | Does it restate what the screen already shows, or deny an alternative its own wording already excludes (「顯示「無法取得」，不以 0 計」)? |
 | 9 | Deletion | Delete this clause — does the reader lose anything that changes what they understand or do? |
 | 10 | Calibration | If the value is an estimate, does the string still say so, and does the reader know what they can correct? See [references/uncertainty.md](references/uncertainty.md). |
 

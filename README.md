@@ -158,6 +158,7 @@ python3 scripts/microcopy_lint.py --self-test
 | `hedge-duplication` | warn | 已為估計值再以文字表達不確定 |
 | `method-filler` | warn | 於結果性備註中描述方法 |
 | `redundant-qualifier` | warn | 範圍前的「約」、斜線後的「上限」 |
+| `negated-alternative` | warn | 陳述情況後又否定已被排除的替代（「顯示「無法取得」，不以 0 站計」） |
 | `exclamation-emoji` | error | 例行、錯誤、破壞性狀態不適用的語氣 |
 | `punctuation-form` | warn | 中文句中的半形標點 |
 | `trailing-period` | warn | 標籤結尾的句號 |

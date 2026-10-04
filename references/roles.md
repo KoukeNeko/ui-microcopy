@@ -94,7 +94,7 @@ Voice: none.
 - Difference: the ✓ names; the ✗ addresses the reader and instructs.
 - A setting's label or description states what happens when it is on; the
   off case is inferred: ✓ 洗手時自動開始計時 ／ Start a timer when you wash
-  your hands; ✗ 開啟後洗手時會計時，關閉後不會.
+  your hands; ✗ 「開啟後洗手時會計時，關閉後不會」.
 
 ### value — the figure
 
@@ -125,6 +125,13 @@ Voice: none.
   purpose: a concrete example gets pasted verbatim into a brief about a
   different ingredient, and an example with nothing to say becomes 「無油」.
   Fill the slot from the brief; when nothing fills it, the note is empty.
+- A condition and its outcome are stated once; the alternative the outcome
+  already excludes is not stated again.
+  - ✓ 〔來源〕無法取得時，該列顯示「無法取得」 ／ When 〔a source〕 is unavailable, its row shows "Unavailable"
+  - ✗ 〔來源〕無法取得時，該列顯示「無法取得」，不以 0 計 ／ …, not counted as 0
+  - Difference: showing 「無法取得」 already settles the row; the ✗ then denies
+    a count of 0 that nobody proposed, which makes the reader wonder whether
+    0 was a possibility.
 
 ### title — the name of the screen or step
 
