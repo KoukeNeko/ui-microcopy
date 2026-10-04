@@ -284,6 +284,22 @@ RULES: tuple[Rule, ...] = (
         "The second number after the slash is the target: 「128 / 2,400 mg」.",
     ),
     Rule(
+        "negated-alternative",
+        "warn",
+        None,
+        re.compile(
+            # 「顯示「無法取得」，不以 0 站計」: what is shown already settles the
+            # case; the clause after it rules out an option nobody raised. A
+            # quoted span is masked to ＊ in documentation, so match both.
+            r"(顯示|呈現|標示|標為|記為|填入)(「[^」]*」|『[^』]*』|＊+)[，；]\s*"
+            r"(而|並)?(不(以|當作|視為|算作|算是|計為|記為|顯示|填)|並非|而非|而不是)[^，。；]{0,10}"
+            # 「開啟後洗手時會計時，關閉後不會」: the off case is inferred.
+            r"|開啟後[^。；]{0,24}[，；]\s*關閉後(則)?(不|沒有|無)"
+        ),
+        "States the case, then denies the alternative it already excludes.",
+        "Say it once: 「某一來源無法取得時，該列顯示「無法取得」」; the other branch is inferred.",
+    ),
+    Rule(
         "exclamation-emoji",
         "error",
         None,
@@ -534,6 +550,9 @@ SELF_TEST = (
     ("label", "數字直接來自 Claude Code 與 Codex，不是推測", "provenance-meta"),
     ("value", "約 200 g（170–230 g）", "hedge-duplication"),
     ("value", "128 / 2,400 mg 上限", "redundant-qualifier"),
+    ("note", "某一來源無法取得時，該列顯示「無法取得」，不以 0 站計", "negated-alternative"),
+    ("label", "開啟後洗手時會計時，關閉後不會", "negated-alternative"),
+    ("note", "某一來源無法取得時，該列顯示「無法取得」", None),
     ("empty", "我們還沒有紀錄", "we-voice"),
     ("button", "確定要刪除嗎？", "question-label"),
     ("status", "當前設定已保存", "zh-tw-vocabulary"),
@@ -559,6 +578,7 @@ SELF_TEST = (
     ("prose", "拿掉 -g 就裝進專案吧。", "prose-particle"),
     ("prose", "你只要跑一次 linter。", "reader-address"),
     ("prose", "規則「你的」只在需要區分歸屬時出現。", None),
+    ("prose", "某一來源無法取得時，該列顯示「無法取得」，不以 0 站計。", "negated-alternative"),
     ("prose", "省略 -g 則安裝至目前專案的 .claude/skills/。", None),
 )
 
